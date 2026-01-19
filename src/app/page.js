@@ -10,6 +10,9 @@ import SquareButton from './button/SquareButton';
 import NavigationButton from './button/NavigationButton';
 import PreviousButton from './button/PreviousButton';
 
+import Lottie from 'lottie-react';
+import animationData from './lottie/lottie.json';
+
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(null);
 
@@ -20,17 +23,24 @@ export default function Home() {
         baseHeight={500}
         topColor={APP_COLORS.pink.secondary}
         topHeight={340}
+        baseChildren={
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
+            <div style={{ width: '200px', height: '200px' }}>
+              <Lottie animationData={animationData} loop={true} />
+            </div>
+          </div>
+        }
       >
         <TitleText>Sega Genre: Romance</TitleText>
-        <SubText>The English then advanced on the major Breton town of Vannes. The French garrison repelled an immediate assault and the English began a siege. English raiding parties devastated large parts of eastern Brittany, but attempts to</SubText>
-        
+        <SubText>The English then advanced on the major Breton town of Vannes. The French garrison repelled an immediate assault and the English began a siege. English raiding parties devastated large parts of eastern Brittany, read more...</SubText>
+
         <TitleText>How confident are you that this lyrics was written by a human?</TitleText>
-        
+
         <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
           {Array.from({ length: 5 }).map((_, i) => {
             const buttonNumber = i + 1;
             return (
-              <SquareButton 
+              <SquareButton
                 key={buttonNumber}
                 label={buttonNumber}
                 isActive={activeIndex === buttonNumber}
