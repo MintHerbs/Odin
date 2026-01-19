@@ -1,5 +1,12 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
+// Configure Roboto
+const roboto = Roboto({
+  weight: ["500", "600"],
+  subsets: ["latin"],
+  variable: "--font-roboto", // This creates a CSS variable we can use in styles
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +27,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} antialiased`}
       >
         {children}
       </body>
