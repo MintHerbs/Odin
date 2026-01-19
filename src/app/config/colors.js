@@ -43,5 +43,6 @@ export const APP_COLORS = {
     button: '#1F2429',
     subtext: '#4C454C',
     mainText: '#1F2429',
+    slider_inactive: '#1F242933'
   }
 };

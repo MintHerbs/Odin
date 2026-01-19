@@ -1,13 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { APP_COLORS } from '../config/colors';
 
-const SubText = ({ children }) => {
+const SubText = ({ children, fullText }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleReadMore = (e) => {
+        e.preventDefault();
+        setIsModalOpen(true);
+    };
+
     return (
-        <div style={styles.container}>
-            <span style={styles.sub}>
-                {children}
-            </span>
-        </div>
+        <>
+            <div style={styles.container}>
+                <span style={styles.sub}>
+                    {children}
+                    {fullText && (
+                        <span
+                            onClick={handleReadMore}
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
+                            style={{
+                                ...styles.readMore,
+                                opacity: isHovered ? 0.6 : 1
+                            }}
+                        >
+                            {" "}read more...
+                        </span>
+                    )}
+                </span>
+            </div>
+
+            {isModalOpen && (
+                <div style={styles.overlay} onClick={() => setIsModalOpen(false)}>
+                    <div
+                        style={styles.modal}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            style={styles.closeBtn}
+                            onClick={() => setIsModalOpen(false)}
+                        >
+                            ×
+                        </button>
+                        <div style={styles.modalContent}>
+                            <span style={styles.modalText}>
+                                {fullText}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
@@ -24,6 +68,57 @@ const styles = {
         color: APP_COLORS.ui.subtext,
         lineHeight: '1.5',
         display: 'block'
+    },
+    readMore: {
+        fontWeight: '700', // Bold
+        cursor: 'pointer',
+        color: APP_COLORS.ui.button,
+        marginLeft: '4px',
+        transition: 'opacity 0.2s ease'
+    },
+    overlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+        backdropFilter: 'blur(4px)'
+    },
+    modal: {
+        backgroundColor: 'white',
+        width: '400px',
+        padding: '30px',
+        borderRadius: '20px',
+        position: 'relative',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+    },
+    closeBtn: {
+        position: 'absolute',
+        top: '15px',
+        right: '15px',
+        background: 'none',
+        border: 'none',
+        fontSize: '28px',
+        cursor: 'pointer',
+        lineHeight: 1,
+        color: APP_COLORS.ui.button
+    },
+    modalContent: {
+        marginTop: '10px'
+    },
+    modalText: {
+        fontFamily: 'var(--font-roboto)',
+        fontWeight: '500',
+        fontSize: 16,
+        color: APP_COLORS.ui.subtext,
+        lineHeight: '1.6'
     }
 };
 

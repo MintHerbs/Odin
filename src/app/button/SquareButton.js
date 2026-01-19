@@ -12,10 +12,10 @@ const SquareButton = ({
   const buttonStyle = {
     backgroundColor: isActive
       ? `${APP_COLORS.ui.button}ff`
-      : `${APP_COLORS.btn.btn_inactive}60`,
+      : `${APP_COLORS.btn.btn_inactive}70`,
     opacity: '1',
-    width: '40px',
-    height: '40px',
+    width: '45px',
+    height: '45px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -29,8 +29,8 @@ const SquareButton = ({
     borderStyle: 'solid',
     borderColor: isActive ? APP_COLORS.btn.btn_inactive : APP_COLORS.ui.button,
     color: isActive ? APP_COLORS.btn.btn_inactive : APP_COLORS.ui.button,
-    width: '24px',
-    height: '24px',
+    width: '26px',
+    height: '26px',
     borderRadius: '50%',
     display: 'flex',
     justifyContent: 'center',
