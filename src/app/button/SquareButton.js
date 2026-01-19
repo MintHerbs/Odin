@@ -12,7 +12,7 @@ const SquareButton = ({
   const buttonStyle = {
     backgroundColor: isActive
       ? `${APP_COLORS.ui.button}ff`
-      : `${APP_COLORS.btn.btn_inactive}70`,
+      : `#2D353C1A`,
     opacity: '1',
     width: '45px',
     height: '45px',
