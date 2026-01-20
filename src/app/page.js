@@ -1,9 +1,9 @@
 'use client';
 
-import Survey from './screen/survey';
+import DatabaseRecords from './database/database';
 
 export default function Home() {
   return (
-    <Survey />
+    <DatabaseRecords />
   );
 }
