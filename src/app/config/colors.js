@@ -19,17 +19,31 @@ export const APP_COLORS = {
     secondary: '#FCF7E8',
     background: '#FDFAEF',
   },
-  black: {
+
+  gray: {
     questionnaire: '#2D353C',
     textBox: '#383F46',
     background: '#EAEDF0',
   },
+
+  black: {
+    primary: '#2D353C',
+    secondary: '#383F46',
+    background: '#EAEDF0',
+  },
+  gray: {
+    primary: '#5A71D9',
+    secondary: '#D9E5FF',
+    background: '#E5E9F8',
+  },
   sega: {
-    orange: '#FFAE19',
+    primary: '#FFAE19',
+    secondary: '#FFF2DB',
     background: '#FFF2DB',
   },
   ai: {
-    gradient: ['#FF687C', '#FF7C69', '#FF9255'],
+    primary: '#FF687C',
+    secondary: '#FF9255',
     background: '#FFEBEF',
   },
   birthday: {
