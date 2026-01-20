@@ -1,11 +1,15 @@
 import React from 'react';
 
-const PrimaryCard = ({ color, height, width = '500px', children }) => {
+const PrimaryCard = ({ color, gradient, height, width = '500px', children }) => {
+    const backgroundStyle = gradient
+        ? { backgroundImage: `linear-gradient(135deg, ${gradient.join(', ')})` }
+        : { backgroundColor: color };
+
     return (
         <div
             className="primary-card"
             style={{
-                backgroundColor: color,
+                ...backgroundStyle,
                 width: width,
                 minHeight: `${height}px`,
                 height: 'auto',
@@ -26,7 +30,8 @@ const PrimaryCard = ({ color, height, width = '500px', children }) => {
                 paddingBottom: '40px',
 
                 gap: '2px',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                transition: 'all 0.5s ease'
             }}
         >
             {children}

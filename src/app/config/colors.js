@@ -27,29 +27,27 @@ export const APP_COLORS = {
   },
 
   black: {
-    primary: '#2D353C',
-    secondary: '#383F46',
-    background: '#EAEDF0',
-  },
-  gray: {
-    primary: '#5A71D9',
-    secondary: '#D9E5FF',
+    questionnaire: '#2D353C',
+    textBox: '#383F46',
     background: '#E5E9F8',
   },
-  sega: {
-    primary: '#FFAE19',
-    secondary: '#FFF2DB',
-    background: '#FFF2DB',
-  },
+
   ai: {
-    primary: '#FF687C',
-    secondary: '#FF9255',
-    background: '#FFEBEF',
+    primary: '#800E13',
+    secondary: '#F7E1E1',
+    background: '#FFF5F5',
+  },
+  sega: {
+    primary: '#8ECAE6',
+    secondary: '#E2F2F5',
+    background: '#F7FCFD',
   },
   birthday: {
-    blue: '#82AAFF',
-    insert: '#7DA3F4',
+    primary: '#EED078',
+    secondary: '#FCF7E8',
+    background: '#FDFAEF',
   },
+
   btn: {
     btn_inactive: '#D9D9D9',
   },

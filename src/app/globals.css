@@ -136,3 +136,26 @@ body {
 }
 
 /* Mobile Responsive - Under 700px */
+@media (max-width: 700px) {
+  .primary-card {
+    width: 90%;
+  }
+}
+
+/* Specific overrides for ModerationFlow to make buttons bigger without changing SquareButton.js */
+.modern-flow-buttons .square-btn {
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 12px !important;
+}
+
+.modern-flow-buttons .circle-container {
+  width: 50px !important;
+  height: 50px !important;
+  font-size: 24px !important;
+}
+
+.modern-flow-buttons .square-btn img {
+  width: 48px !important;
+  height: 48px !important;
+}

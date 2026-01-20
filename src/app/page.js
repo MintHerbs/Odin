@@ -1,9 +1,9 @@
 'use client';
 
-import Survey from './screen/survey';
+import ModeratingScreen from './screen/ModerationFlow';
 
 export default function Home() {
   return (
-    <Survey />
+    <ModeratingScreen />
   );
 }
