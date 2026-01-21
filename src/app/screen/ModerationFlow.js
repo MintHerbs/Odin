@@ -33,16 +33,33 @@ import okInactive from '../reaction/ok_inactive.png';
 import proActive from '../reaction/pro_active.png';
 import proInactive from '../reaction/pro_inactive.png';
 
-const ModeratingScreen = () => {
+const ModeratingScreen = ({ onComplete }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [birthday, setBirthday] = useState('');
     const [segaFamiliarity, setSegaFamiliarity] = useState(null);
     const [aiSentiment, setAiSentiment] = useState(null);
+    const [showError, setShowError] = useState(false);
     const totalSlides = 4;
 
     const handleNext = () => {
+        let isValid = true;
+
+        if (currentSlide === 1 && !birthday) isValid = false;
+        if (currentSlide === 2 && segaFamiliarity === null) isValid = false;
+        if (currentSlide === 3 && aiSentiment === null) isValid = false;
+
+        if (!isValid) {
+            setShowError(true);
+            setTimeout(() => setShowError(false), 3000);
+            return;
+        }
+
         if (currentSlide < totalSlides - 1) {
             setCurrentSlide(prev => prev + 1);
+            setShowError(false);
+        } else {
+            // Last slide, we are done!
+            if (onComplete) onComplete();
         }
     };
 
@@ -109,7 +126,6 @@ const ModeratingScreen = () => {
                     <>
                         <TitleText>When is your birthday?</TitleText>
                         <div style={styles.dateInputContainer}>
-                            <img src={calendarIcon.src} alt="calendar" style={styles.calendarIcon} />
                             <input
                                 type="date"
                                 value={birthday}
@@ -162,9 +178,16 @@ const ModeratingScreen = () => {
                     </>
                 )}
 
-                <div style={styles.navContainer}>
-                    <PreviousButton onPress={handlePrevious} />
-                    <NavigationButton onPress={handleNext} />
+                <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
+                    {showError && (
+                        <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
+                            Please complete this step to continue
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <PreviousButton onPress={handlePrevious} />
+                        <NavigationButton onPress={handleNext} />
+                    </div>
                 </div>
             </StackCard>
         </Background>

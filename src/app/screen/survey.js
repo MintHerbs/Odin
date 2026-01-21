@@ -10,7 +10,6 @@ import SquareButton from '../button/SquareButton';
 import NavigationButton from '../button/NavigationButton';
 import PreviousButton from '../button/PreviousButton';
 import SlidePagination from '../layer/SlidePagination';
-import { supabase } from '../database/database';
 
 import Lottie from 'lottie-react';
 import celebration from '../lottie/celebration.json';
@@ -27,30 +26,12 @@ const LOTTIE_MAP = {
     romance
 };
 
-const Survey = () => {
-    const [records, setRecords] = useState([]);
+const Survey = ({ records }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [activeIndex, setActiveIndex] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [showError, setShowError] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            const { data, error } = await supabase.from('survey_data').select('*').order('id', { ascending: true });
-            if (error) throw error;
-            setRecords(data || []);
-        } catch (error) {
-            console.error('Error fetching survey data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) return <div className="flex items-center justify-center min-h-screen">Loading Survey...</div>;
-    if (records.length === 0) return <div className="flex items-center justify-center min-h-screen">No survey data found.</div>;
+    if (!records || records.length === 0) return <div className="flex items-center justify-center min-h-screen">No survey data found.</div>;
 
     const currentRecord = records[currentSlide];
     const totalSlides = records.length;
@@ -66,9 +47,16 @@ const Survey = () => {
     console.log(`[Survey] Slide ${currentSlide}: color_code='${currentRecord.color_code}' -> theme='${themeName}', lottie='${currentRecord.lottie}' -> matched='${matchedLottieName}'`);
 
     const handleNext = () => {
+        if (activeIndex === null) {
+            setShowError(true);
+            setTimeout(() => setShowError(false), 3000);
+            return;
+        }
+
         if (currentSlide < totalSlides - 1) {
             setCurrentSlide(prev => prev + 1);
             setActiveIndex(null); // Reset rating for next slide
+            setShowError(false);
         }
     };
 
@@ -76,6 +64,7 @@ const Survey = () => {
         if (currentSlide > 0) {
             setCurrentSlide(prev => prev - 1);
             setActiveIndex(null); // Reset rating for previous slide
+            setShowError(false);
         }
     };
 
@@ -123,9 +112,16 @@ const Survey = () => {
                 </div>
 
                 {/* --- Navigation Buttons Container --- */}
-                <div style={styles.navContainer}>
-                    <PreviousButton onPress={handlePrevious} />
-                    <NavigationButton onPress={handleNext} />
+                <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
+                    {showError && (
+                        <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
+                            Please complete this step to continue
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <PreviousButton onPress={handlePrevious} />
+                        <NavigationButton onPress={handleNext} />
+                    </div>
                 </div>
             </StackCard>
         </Background>

@@ -18,7 +18,7 @@ function DatabaseRecords() {
 
   async function getRecords() {
     try {
-      const { data, error } = await supabase.from("survey_data").select();
+      const { data, error } = await supabase.from("survey_data").select().order('sid', { ascending: true });
       if (error) throw error;
       setRecords(data || []);
     } catch (error) {
@@ -37,17 +37,24 @@ function DatabaseRecords() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-800 border-b border-gray-700">
-              <th className="p-4 font-semibold text-gray-300">ID</th>
-              <th className="p-4 font-semibold text-gray-300">Color Code</th>
+              <th className="p-4 font-semibold text-gray-300">SID</th>
               <th className="p-4 font-semibold text-gray-300">Genre</th>
+              <th className="p-4 font-semibold text-gray-300">Popularity</th>
+              <th className="p-4 font-semibold text-gray-300">Comments Density</th>
+              <th className="p-4 font-semibold text-gray-300">Age</th>
+              <th className="p-4 font-semibold text-gray-300">Color</th>
               <th className="p-4 font-semibold text-gray-300">Lyrics</th>
               <th className="p-4 font-semibold text-gray-300">Lottie</th>
             </tr>
           </thead>
           <tbody>
             {records.map((record) => (
-              <tr key={record.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                <td className="p-4 text-gray-400 font-mono text-sm">{record.id}</td>
+              <tr key={record.sid} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                <td className="p-4 text-gray-400 font-mono text-sm">{record.sid}</td>
+                <td className="p-4 capitalize">{record.genre}</td>
+                <td className="p-4 text-gray-400 text-sm">{record.popularity ?? 'N/A'}</td>
+                <td className="p-4 text-gray-400 text-sm">{record.comments_density ?? 'N/A'}</td>
+                <td className="p-4 text-gray-400 text-sm">{record.age ?? 'N/A'}</td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
                     <div
@@ -57,7 +64,6 @@ function DatabaseRecords() {
                     <span className="font-mono text-sm">{record.color_code}</span>
                   </div>
                 </td>
-                <td className="p-4 capitalize">{record.genre}</td>
                 <td className="p-4 max-w-xs">
                   <div className="truncate text-sm text-gray-400" title={record.lyrics}>
                     {record.lyrics}

@@ -1,9 +1,9 @@
 import React from 'react';
 import { APP_COLORS } from '../config/colors';
 
-const TitleText = ({ children }) => {
+const TitleText = ({ children, color }) => {
     return (
-        <span style={styles.title}>
+        <span style={{ ...styles.title, color: color || styles.title.color }}>
             {children}
         </span>
     );
