@@ -26,10 +26,12 @@ const LOTTIE_MAP = {
     romance
 };
 
-const Survey = ({ records }) => {
+const Survey = ({ records, sessionId, onSessionStart }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [activeIndex, setActiveIndex] = useState(null);
     const [showError, setShowError] = useState(false);
+
+    // sessionId is passed from parent, no need to generate here
 
     if (!records || records.length === 0) return <div className="flex items-center justify-center min-h-screen">No survey data found.</div>;
 

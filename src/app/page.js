@@ -5,10 +5,18 @@ import ModeratingScreen from './screen/ModerationFlow';
 import LoaderScreen from './screen/LoaderScreen';
 import Survey from './screen/survey';
 import { supabase } from './database/database';
+import { generateSessionId } from './utils/sessionUtils';
 
 export default function Home() {
   const [view, setView] = useState('moderation');
   const [records, setRecords] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
+
+  useEffect(() => {
+    // Generate session_id on app load
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+  }, []);
 
   useEffect(() => {
     if (view === 'loading') {
@@ -37,7 +45,7 @@ export default function Home() {
   };
 
   if (view === 'moderation') {
-    return <ModeratingScreen onComplete={() => setView('loading')} />;
+    return <ModeratingScreen sessionId={sessionId} onComplete={() => setView('loading')} />;
   }
 
   if (view === 'loading') {
@@ -45,7 +53,7 @@ export default function Home() {
   }
 
   if (view === 'survey') {
-    return <Survey records={records} />;
+    return <Survey records={records} sessionId={sessionId} />;
   }
 
   return null;

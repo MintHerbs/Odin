@@ -11,6 +11,7 @@ import SquareButton from '../button/SquareButton';
 import NavigationButton from '../button/NavigationButton';
 import PreviousButton from '../button/PreviousButton';
 import SlidePagination from '../layer/SlidePagination';
+import { submitSessionData } from '../utils/sessionUtils';
 
 import Lottie from 'lottie-react';
 import moonAnimation from '../lottie/moon.json';
@@ -33,15 +34,16 @@ import okInactive from '../reaction/ok_inactive.png';
 import proActive from '../reaction/pro_active.png';
 import proInactive from '../reaction/pro_inactive.png';
 
-const ModeratingScreen = ({ onComplete }) => {
+const ModeratingScreen = ({ sessionId, onComplete }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [birthday, setBirthday] = useState('');
     const [segaFamiliarity, setSegaFamiliarity] = useState(null);
     const [aiSentiment, setAiSentiment] = useState(null);
     const [showError, setShowError] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const totalSlides = 4;
 
-    const handleNext = () => {
+    const handleNext = async () => {
         let isValid = true;
 
         if (currentSlide === 1 && !birthday) isValid = false;
@@ -58,8 +60,18 @@ const ModeratingScreen = ({ onComplete }) => {
             setCurrentSlide(prev => prev + 1);
             setShowError(false);
         } else {
-            // Last slide, we are done!
-            if (onComplete) onComplete();
+            // Last slide, submit data and complete
+            setIsSubmitting(true);
+            try {
+                await submitSessionData(sessionId, birthday, segaFamiliarity, aiSentiment);
+                if (onComplete) onComplete();
+            } catch (error) {
+                console.error('Error submitting session data:', error);
+                setShowError(true);
+                setTimeout(() => setShowError(false), 3000);
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -181,12 +193,12 @@ const ModeratingScreen = ({ onComplete }) => {
                 <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                     {showError && (
                         <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
-                            Please complete this step to continue
+                            {isSubmitting ? 'Submitting...' : 'Please complete this step to continue'}
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <PreviousButton onPress={handlePrevious} />
-                        <NavigationButton onPress={handleNext} />
+                        <PreviousButton onPress={handlePrevious} disabled={isSubmitting} />
+                        <NavigationButton onPress={handleNext} disabled={isSubmitting} />
                     </div>
                 </div>
             </StackCard>
