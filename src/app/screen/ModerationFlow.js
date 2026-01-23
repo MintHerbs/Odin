@@ -40,25 +40,67 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const [segaFamiliarity, setSegaFamiliarity] = useState(null);
     const [aiSentiment, setAiSentiment] = useState(null);
     const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const totalSlides = 4;
 
+    // Calculate age from birthday
+    const calculateAge = (birthdayString) => {
+        if (!birthdayString) return null;
+        const today = new Date();
+        const birthDate = new Date(birthdayString);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const validateBirthday = () => {
+        if (!birthday) {
+            setErrorMessage('Please complete this step to continue');
+            return false;
+        }
+        
+        const age = calculateAge(birthday);
+        if (age < 10) {
+            setErrorMessage('You must be at least 10 years old to participate');
+            return false;
+        }
+        
+        return true;
+    };
+
     const handleNext = async () => {
         let isValid = true;
+        let errorMsg = 'Please complete this step to continue';
 
-        if (currentSlide === 1 && !birthday) isValid = false;
-        if (currentSlide === 2 && segaFamiliarity === null) isValid = false;
-        if (currentSlide === 3 && aiSentiment === null) isValid = false;
+        if (currentSlide === 1) {
+            isValid = validateBirthday();
+            // Error message is set by validateBirthday function
+        } else if (currentSlide === 2 && segaFamiliarity === null) {
+            isValid = false;
+        } else if (currentSlide === 3 && aiSentiment === null) {
+            isValid = false;
+        }
 
         if (!isValid) {
+            if (currentSlide !== 1) {
+                setErrorMessage(errorMsg);
+            }
             setShowError(true);
-            setTimeout(() => setShowError(false), 3000);
+            setTimeout(() => {
+                setShowError(false);
+                setErrorMessage('');
+            }, 3000);
             return;
         }
 
         if (currentSlide < totalSlides - 1) {
             setCurrentSlide(prev => prev + 1);
             setShowError(false);
+            setErrorMessage('');
         } else {
             // Last slide, submit data and complete
             setIsSubmitting(true);
@@ -67,8 +109,12 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 if (onComplete) onComplete();
             } catch (error) {
                 console.error('Error submitting session data:', error);
+                setErrorMessage('Failed to submit data. Please try again.');
                 setShowError(true);
-                setTimeout(() => setShowError(false), 3000);
+                setTimeout(() => {
+                    setShowError(false);
+                    setErrorMessage('');
+                }, 3000);
             } finally {
                 setIsSubmitting(false);
             }
@@ -146,6 +192,11 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                             />
                         </div>
+                        {birthday && (
+                            <div style={styles.ageDisplay}>
+                                <SubText>Age: {calculateAge(birthday)} years old</SubText>
+                            </div>
+                        )}
                     </>
                 )}
 
@@ -193,7 +244,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                     {showError && (
                         <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
-                            {isSubmitting ? 'Submitting...' : 'Please complete this step to continue'}
+                            {isSubmitting ? 'Submitting...' : errorMessage || 'Please complete this step to continue'}
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -253,6 +304,11 @@ const styles = {
         '::placeholder': {
             color: '#1F242999'
         }
+    },
+    ageDisplay: {
+        marginTop: '10px',
+        textAlign: 'center',
+        opacity: 0.8
     }
 };
 

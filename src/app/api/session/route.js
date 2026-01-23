@@ -16,23 +16,26 @@ export async function POST(request) {
       return Response.json({ error: 'session_id is required' }, { status: 400 });
     }
 
+    // Use upsert to insert or update if session_id already exists
     const { data, error } = await supabase
       .from('session')
-      .insert([
+      .upsert([
         {
           session_id,
           participant_age: participant_age || null,
           sega_familiarity: sega_familiarity || null,
           ai_sentiment: ai_sentiment || null
         }
-      ]);
+      ], {
+        onConflict: 'session_id'
+      });
 
     if (error) {
       console.error('Supabase error:', error);
       return Response.json({ error: `Database error: ${error.message}` }, { status: 500 });
     }
 
-    console.log('Successfully inserted session data:', data);
+    console.log('Successfully upserted session data:', data);
     return Response.json({ success: true, data });
   } catch (error) {
     console.error('API error:', error);
