@@ -119,3 +119,33 @@ export const mixLyricsForSession = async (sessionId, age, segaFamiliarity, aiSen
     throw error;
   }
 };
+
+// Save votes to session_votes table
+export const saveVotes = async (sessionId, votes) => {
+  try {
+    console.log('🗳️  Submitting votes for session:', sessionId);
+    console.log('📊 Votes:', votes);
+    
+    const response = await fetch('/api/save-votes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        votes: votes
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Save votes API Error:', response.status, errorData);
+      throw new Error(`Failed to save votes: ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Votes saved successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error saving votes:', error);
+    throw error;
+  }
+};

@@ -17,19 +17,25 @@ import engager from '../lottie/engager.json';
 import politics from '../lottie/politics.json';
 import tipik from '../lottie/tipik.json';
 import romance from '../lottie/romance.json';
+import sega from '../lottie/sega.json'; // Using sega as seggae placeholder
 
 const LOTTIE_MAP = {
     celebration,
     engager,
     politics,
     tipik,
-    romance
+    romance,
+    seggae: sega // Map seggae to sega animation
 };
 
-const Survey = ({ records, sessionId, onSessionStart }) => {
+import { saveVotes } from '../utils/sessionUtils';
+
+const Survey = ({ records, sessionId, onSurveyComplete }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [activeIndex, setActiveIndex] = useState(null);
     const [showError, setShowError] = useState(false);
+    const [votes, setVotes] = useState([]); // Store all votes
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // sessionId is passed from parent, no need to generate here
 
@@ -48,17 +54,52 @@ const Survey = ({ records, sessionId, onSessionStart }) => {
 
     console.log(`[Survey] Slide ${currentSlide}: color_code='${currentRecord.color_code}' -> theme='${themeName}', lottie='${currentRecord.lottie}' -> matched='${matchedLottieName}'`);
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (activeIndex === null) {
             setShowError(true);
             setTimeout(() => setShowError(false), 3000);
             return;
         }
 
+        // Save the current vote
+        const currentVote = {
+            lyricId: currentRecord.sid, // This is either the AI ID or the human SID
+            genre: currentRecord.genre,
+            vote: activeIndex,
+            isAI: currentRecord.is_ai || false,
+            lottie: currentRecord.lottie
+        };
+
+        const updatedVotes = [...votes, currentVote];
+        setVotes(updatedVotes);
+
+        console.log('📝 Vote recorded:', currentVote);
+        console.log('📊 Total votes so far:', updatedVotes.length);
+
         if (currentSlide < totalSlides - 1) {
+            // Move to next slide
             setCurrentSlide(prev => prev + 1);
             setActiveIndex(null); // Reset rating for next slide
             setShowError(false);
+        } else {
+            // Last slide - submit all votes
+            console.log('🏁 Survey complete! Submitting all votes...');
+            setIsSubmitting(true);
+
+            try {
+                await saveVotes(sessionId, updatedVotes);
+                console.log('✅ All votes submitted successfully');
+                
+                if (onSurveyComplete) {
+                    onSurveyComplete();
+                }
+            } catch (error) {
+                console.error('❌ Failed to submit votes:', error);
+                setShowError(true);
+                setTimeout(() => setShowError(false), 3000);
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -117,12 +158,12 @@ const Survey = ({ records, sessionId, onSessionStart }) => {
                 <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                     {showError && (
                         <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
-                            Please complete this step to continue
+                            {isSubmitting ? 'Submitting votes...' : 'Please complete this step to continue'}
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <PreviousButton onPress={handlePrevious} />
-                        <NavigationButton onPress={handleNext} />
+                        <PreviousButton onPress={handlePrevious} disabled={isSubmitting} />
+                        <NavigationButton onPress={handleNext} disabled={isSubmitting} />
                     </div>
                 </div>
             </StackCard>
