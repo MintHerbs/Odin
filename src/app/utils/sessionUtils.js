@@ -63,3 +63,28 @@ export const submitSessionData = async (sessionId, birthday, segaFamiliarity, ai
 
   return response.json();
 };
+// Trigger background AI generation with OpenAI
+export const triggerBackgroundAI = async (sessionId) => {
+  try {
+    console.log('🚀 Triggering background AI generation for session:', sessionId);
+    
+    const response = await fetch('/api/trigger-gen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Background AI trigger error:', response.status, errorData);
+      throw new Error(`Failed to trigger background AI: ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Background AI generation triggered:', data);
+    return data;
+  } catch (error) {
+    console.error('Error triggering background AI:', error);
+    throw error;
+  }
+};

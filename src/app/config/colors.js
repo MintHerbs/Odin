@@ -19,19 +19,21 @@ export const APP_COLORS = {
     secondary: '#FCF7E8',
     background: '#FDFAEF',
   },
-
   gray: {
     questionnaire: '#2D353C',
     textBox: '#383F46',
     background: '#EAEDF0',
   },
-
+  mint: { // Replaced Orange for 'Seggae'
+    primary: '#A8DADC', 
+    secondary: '#F1FAEE',
+    background: '#F9FFF9',
+  },
   black: {
     questionnaire: '#2D353C',
     textBox: '#383F46',
     background: '#E5E9F8',
   },
-
   ai: {
     primary: '#800E13',
     secondary: '#F7E1E1',
@@ -47,7 +49,6 @@ export const APP_COLORS = {
     secondary: '#FCF7E8',
     background: '#FDFAEF',
   },
-
   btn: {
     btn_inactive: '#D9D9D9',
   },

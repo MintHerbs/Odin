@@ -5,7 +5,7 @@ import ModeratingScreen from './screen/ModerationFlow';
 import LoaderScreen from './screen/LoaderScreen';
 import Survey from './screen/survey';
 import { supabase } from './database/database';
-import { generateSessionId } from './utils/sessionUtils';
+import { generateSessionId, triggerBackgroundAI } from './utils/sessionUtils';
 
 export default function Home() {
   const [view, setView] = useState('moderation');
@@ -13,9 +13,22 @@ export default function Home() {
   const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
-    // Generate session_id on app load
-    const newSessionId = generateSessionId();
-    setSessionId(newSessionId);
+    // Generate session_id on app load and trigger background AI generation
+    const initializeApp = async () => {
+      const newSessionId = generateSessionId();
+      setSessionId(newSessionId);
+      
+      console.log('🚀 Webpage loaded! Triggering background AI generation...');
+      
+      try {
+        // Trigger background AI generation immediately when page loads
+        await triggerBackgroundAI(newSessionId);
+      } catch (error) {
+        console.error('Failed to trigger background AI generation on page load:', error);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   useEffect(() => {
