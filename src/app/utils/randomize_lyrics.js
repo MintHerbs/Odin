@@ -11,7 +11,7 @@ const supabase = createClient(
  * @param {number} userPreferences.age - User's age
  * @param {number} userPreferences.segaFamiliarity - Sega familiarity (1-5)
  * @param {number} userPreferences.aiSentiment - AI sentiment (1-5)
- * @returns {Promise<Array>} Array of 5 human lyric objects
+ * @returns {Promise<Object>} Object containing lyrics array and selected IDs
  */
 export const selectHumanLyrics = async (userPreferences) => {
   try {
@@ -103,12 +103,20 @@ export const selectHumanLyrics = async (userPreferences) => {
         source: 'human'
       }));
 
+    // Extract the SIDs for storage
+    const selectedSIDs = selectedLyrics.map(lyric => lyric.sid);
+
     console.log('✅ Selected 5 human lyrics:');
     selectedLyrics.forEach((lyric, index) => {
       console.log(`  ${index + 1}. Genre: ${lyric.genre}, SID: ${lyric.sid}`);
     });
 
-    return selectedLyrics;
+    console.log('📋 Selected SIDs:', selectedSIDs);
+
+    return {
+      lyrics: selectedLyrics,
+      selectedSIDs: selectedSIDs
+    };
 
   } catch (error) {
     console.error('❌ Error in selectHumanLyrics:', error);
@@ -170,6 +178,51 @@ export const fetchAILyrics = async (sessionId) => {
 
   } catch (error) {
     console.error('❌ Error in fetchAILyrics:', error);
+    throw error;
+  }
+};
+
+/**
+ * Save selected human lyric IDs to session_real_sega_chosen table
+ * @param {string} sessionId - The session ID
+ * @param {Array<number>} selectedSIDs - Array of 5 selected SIDs
+ * @returns {Promise<Object>} Result of the database operation
+ */
+export const saveSelectedSIDs = async (sessionId, selectedSIDs) => {
+  try {
+    console.log('💾 Saving selected SIDs to session_real_sega_chosen...');
+    console.log(`Session ID: ${sessionId}`);
+    console.log(`SIDs: [${selectedSIDs.join(', ')}]`);
+
+    if (!selectedSIDs || selectedSIDs.length !== 5) {
+      throw new Error(`Expected 5 SIDs, got ${selectedSIDs?.length || 0}`);
+    }
+
+    const payload = {
+      session_id: sessionId,
+      sid1: selectedSIDs[0],
+      sid2: selectedSIDs[1],
+      sid3: selectedSIDs[2],
+      sid4: selectedSIDs[3],
+      sid5: selectedSIDs[4]
+    };
+
+    const { data, error } = await supabase
+      .from('session_real_sega_chosen')
+      .upsert(payload, {
+        onConflict: 'session_id'
+      });
+
+    if (error) {
+      console.error('Error saving selected SIDs:', error);
+      throw new Error(`Failed to save selected SIDs: ${error.message}`);
+    }
+
+    console.log('✅ Successfully saved selected SIDs to database');
+    return { success: true, data };
+
+  } catch (error) {
+    console.error('❌ Error in saveSelectedSIDs:', error);
     throw error;
   }
 };

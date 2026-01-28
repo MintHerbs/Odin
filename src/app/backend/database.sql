@@ -51,9 +51,10 @@ CREATE TABLE session_votes (
 -- 4. Real Sega Chosen Table
 CREATE TABLE session_real_sega_chosen (
     session_id TEXT PRIMARY KEY REFERENCES session(session_id),
-    sid1 int4,
-    sid2 int4,
-    sid3 int4,
-    sid4 int4,
-    sid5 int4
+    sid1 int4, -- ID of the 1st selected human lyric
+    sid2 int4, -- ID of the 2nd selected human lyric
+    sid3 int4, -- ID of the 3rd selected human lyric
+    sid4 int4, -- ID of the 4th selected human lyric
+    sid5 int4, -- ID of the 5th selected human lyric
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
