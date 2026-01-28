@@ -8,7 +8,7 @@ import { APP_COLORS } from '../config/colors';
 import Lottie from 'lottie-react';
 import loadingAnimation from '../lottie/loading.json';
 
-const LoaderScreen = () => {
+const LoaderScreen = ({ message = 'Loading survey...' }) => {
     return (
         <Background bgColor="#EAEDF0">
             <PrimaryCard
@@ -21,7 +21,7 @@ const LoaderScreen = () => {
                         <Lottie animationData={loadingAnimation} loop={true} />
                     </div>
                     <div style={styles.textContainer}>
-                        <TitleText color="#FFFFFF">Loading survey...</TitleText>
+                        <TitleText color="#FFFFFF">{message}</TitleText>
                     </div>
                 </div>
             </PrimaryCard>

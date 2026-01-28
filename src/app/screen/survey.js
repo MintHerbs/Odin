@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import StackCard from '../layer/StackCard';
 import { APP_COLORS } from '../config/colors';
 import Background from '../layer/Background';
@@ -10,14 +10,16 @@ import SquareButton from '../button/SquareButton';
 import NavigationButton from '../button/NavigationButton';
 import PreviousButton from '../button/PreviousButton';
 import SlidePagination from '../layer/SlidePagination';
-
 import Lottie from 'lottie-react';
+import { saveVotes } from '../utils/sessionUtils';
+
+// Import Lottie files
 import celebration from '../lottie/celebration.json';
 import engager from '../lottie/engager.json';
 import politics from '../lottie/politics.json';
 import tipik from '../lottie/tipik.json';
 import romance from '../lottie/romance.json';
-import sega from '../lottie/sega.json'; // Using sega as seggae placeholder
+import sega from '../lottie/sega.json';
 
 const LOTTIE_MAP = {
     celebration,
@@ -25,78 +27,50 @@ const LOTTIE_MAP = {
     politics,
     tipik,
     romance,
-    seggae: sega // Map seggae to sega animation
+    seggae: sega
 };
-
-import { saveVotes } from '../utils/sessionUtils';
 
 const Survey = ({ records, sessionId, onSurveyComplete }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [activeIndex, setActiveIndex] = useState(null);
-    const [showError, setShowError] = useState(false);
-    const [votes, setVotes] = useState([]); // Store all votes
+    const [votes, setVotes] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showError, setShowError] = useState(false);
 
-    // sessionId is passed from parent, no need to generate here
-
-    if (!records || records.length === 0) return <div className="flex items-center justify-center min-h-screen">No survey data found.</div>;
-
-    const currentRecord = records[currentSlide];
     const totalSlides = records.length;
-
-    // Get colors based on color_code from DB
-    // Expected values: "pink", "blue", "purple", "yellow" etc. from APP_COLORS
-    const themeName = currentRecord.color_code?.trim().toLowerCase() || 'pink';
-    const theme = APP_COLORS[themeName] || APP_COLORS.pink;
-
-    const matchedLottieName = currentRecord.lottie?.trim().toLowerCase();
-    const lottieAnimation = LOTTIE_MAP[matchedLottieName] || celebration;
-
-    console.log(`[Survey] Slide ${currentSlide}: color_code='${currentRecord.color_code}' -> theme='${themeName}', lottie='${currentRecord.lottie}' -> matched='${matchedLottieName}'`);
+    const currentRecord = records[currentSlide];
 
     const handleNext = async () => {
         if (activeIndex === null) {
             setShowError(true);
-            setTimeout(() => setShowError(false), 3000);
             return;
         }
 
-        // Save the current vote
+        // Prepare the current vote object
         const currentVote = {
-            lyricId: currentRecord.sid, // This is either the AI ID or the human SID
+            lyricId: currentRecord.sid || currentRecord.id, // Handles Human (sid) or AI (id)
             genre: currentRecord.genre,
             vote: activeIndex,
-            isAI: currentRecord.is_ai || false,
-            lottie: currentRecord.lottie
+            isAI: currentRecord.type === 'ai' || currentRecord.is_ai === true
         };
 
+        // functional update to guarantee we have all votes for submission
         const updatedVotes = [...votes, currentVote];
         setVotes(updatedVotes);
 
-        console.log('📝 Vote recorded:', currentVote);
-        console.log('📊 Total votes so far:', updatedVotes.length);
-
         if (currentSlide < totalSlides - 1) {
-            // Move to next slide
             setCurrentSlide(prev => prev + 1);
-            setActiveIndex(null); // Reset rating for next slide
+            setActiveIndex(null);
             setShowError(false);
         } else {
-            // Last slide - submit all votes
-            console.log('🏁 Survey complete! Submitting all votes...');
+            // Last slide - Submit all collected votes
             setIsSubmitting(true);
-
             try {
                 await saveVotes(sessionId, updatedVotes);
-                console.log('✅ All votes submitted successfully');
-                
-                if (onSurveyComplete) {
-                    onSurveyComplete();
-                }
+                if (onSurveyComplete) onSurveyComplete();
             } catch (error) {
-                console.error('❌ Failed to submit votes:', error);
+                console.error("Submission failed:", error);
                 setShowError(true);
-                setTimeout(() => setShowError(false), 3000);
             } finally {
                 setIsSubmitting(false);
             }
@@ -106,79 +80,63 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
     const handlePrevious = () => {
         if (currentSlide > 0) {
             setCurrentSlide(prev => prev - 1);
-            setActiveIndex(null); // Reset rating for previous slide
-            setShowError(false);
+            // Optional: Logic to pop the last vote from state if returning
+            setActiveIndex(null);
         }
     };
+
+    if (!currentRecord) return null;
+
+    const theme = APP_COLORS[currentRecord.color_code] || APP_COLORS.blue;
 
     return (
         <Background bgColor={theme.background}>
             <StackCard
                 baseColor={theme.primary}
-                baseHeight={500}
+                baseHeight={520}
                 topColor={theme.secondary}
-                topHeight={340}
+                topHeight={320}
                 baseChildren={
-                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
-                        <div style={{ width: '200px', height: '200px' }}>
-                            <Lottie animationData={lottieAnimation} loop={true} />
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+                        <div style={{ width: '180px', height: '180px' }}>
+                            <Lottie animationData={LOTTIE_MAP[currentRecord.lottie] || tipik} loop={true} />
                         </div>
                     </div>
                 }
             >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
                     <SlidePagination amount={totalSlides} activeIndex={currentSlide} />
                 </div>
-                <TitleText>Sega Genre: {currentRecord.genre}</TitleText>
-                <SubText
-                    fullText={currentRecord.lyrics}
-                >
-                    {currentRecord.lyrics?.length > 140
-                        ? currentRecord.lyrics.substring(0, 140)
-                        : currentRecord.lyrics}
-                </SubText>
 
-                <TitleText>How confident are you that this lyrics was written by a human?</TitleText>
-
-                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                    {Array.from({ length: 5 }).map((_, i) => {
-                        const buttonNumber = i + 1;
-                        return (
-                            <SquareButton
-                                key={buttonNumber}
-                                label={buttonNumber}
-                                isActive={activeIndex === buttonNumber}
-                                onClick={() => setActiveIndex(buttonNumber)}
-                            />
-                        );
-                    })}
+                <TitleText>How do you rate these lyrics? (Genre: {currentRecord.genre})</TitleText>
+                
+                <div style={{ maxHeight: '120px', overflowY: 'auto', margin: '10px 0', padding: '10px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '8px' }}>
+                    <SubText>{currentRecord.lyrics}</SubText>
                 </div>
 
-                {/* --- Navigation Buttons Container --- */}
-                <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '10px' }}>
+                    {[1, 2, 3, 4, 5].map((num) => (
+                        <SquareButton
+                            key={num}
+                            label={num}
+                            isActive={activeIndex === num}
+                            onClick={() => setActiveIndex(num)}
+                        />
+                    ))}
+                </div>
+
+                <div style={{ marginTop: 'auto', alignSelf: 'flex-end', display: 'flex', gap: '10px', paddingTop: '20px' }}>
                     {showError && (
-                        <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
-                            {isSubmitting ? 'Submitting votes...' : 'Please complete this step to continue'}
-                        </div>
+                        <span style={{ color: 'red', fontSize: '12px' }}>
+                            {isSubmitting ? 'Saving...' : 'Please select a rating'}
+                        </span>
                     )}
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <PreviousButton onPress={handlePrevious} disabled={isSubmitting} />
-                        <NavigationButton onPress={handleNext} disabled={isSubmitting} />
-                    </div>
+                    <PreviousButton onPress={handlePrevious} disabled={isSubmitting} />
+                    <NavigationButton onPress={handleNext} disabled={isSubmitting} />
                 </div>
             </StackCard>
         </Background>
     );
-};
-
-const styles = {
-    navContainer: {
-        marginTop: 'auto',      // Pushes the container to the bottom of the flex box
-        alignSelf: 'flex-end',  // Pushes the container to the right
-        display: 'flex',
-        gap: '10px',            // Space between Previous and Navigation buttons
-        paddingTop: '20px'      // Extra breathing room from the items above
-    }
 };
 
 export default Survey;

@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
-// All 6 genres
+// All 6 genres for the study
 const GENRES = ['politics', 'engager', 'romance', 'celebration', 'tipik', 'seggae'];
 
 export async function POST(request) {
@@ -13,100 +13,50 @@ export async function POST(request) {
     const body = await request.json();
     const { session_id, votes } = body;
 
-    console.log('🗳️  Saving votes for session:', session_id);
-    console.log('📊 Votes received:', votes);
-
-    if (!session_id) {
-      return Response.json({ error: 'session_id is required' }, { status: 400 });
+    if (!session_id || !votes) {
+      return Response.json({ error: 'Missing session_id or votes' }, { status: 400 });
     }
 
-    if (!votes || !Array.isArray(votes)) {
-      return Response.json({ error: 'votes must be an array' }, { status: 400 });
-    }
+    // Initialize payload with default values for all genres
+    const votePayload = { session_id: session_id };
 
-    // Initialize payload with all fields set to "-"
-    const votePayload = {
-      session_id: session_id
-    };
-
-    // Initialize all genre fields to "-"
     GENRES.forEach(genre => {
+      // AI Columns
       votePayload[`${genre}_ai_id`] = "-";
       votePayload[`${genre}_ai_vote`] = null;
+      // Human (Sega) Columns
       votePayload[`${genre}_sega_id`] = null;
       votePayload[`${genre}_sega_vote`] = null;
     });
 
-    console.log('📦 Initialized vote payload with "-" placeholders');
-
-    // Process each vote
-    votes.forEach((vote, index) => {
+    // Map the array of votes into the flat table structure
+    votes.forEach((vote) => {
       const { lyricId, genre, vote: voteValue, isAI } = vote;
-      
-      console.log(`  Processing vote ${index + 1}:`, { lyricId, genre, voteValue, isAI });
+      if (!genre) return;
 
-      if (!genre || !lyricId || !voteValue) {
-        console.warn(`    ⚠️  Skipping incomplete vote:`, vote);
-        return;
-      }
-
-      // Normalize genre to lowercase
       const normalizedGenre = genre.toLowerCase().trim();
-
-      // Check if genre is valid
-      if (!GENRES.includes(normalizedGenre)) {
-        console.warn(`    ⚠️  Invalid genre "${normalizedGenre}", skipping`);
-        return;
-      }
-
-      // Determine if this is AI or human (sega) lyric
-      if (isAI) {
-        // AI lyric
-        votePayload[`${normalizedGenre}_ai_id`] = lyricId;
-        votePayload[`${normalizedGenre}_ai_vote`] = voteValue;
-        console.log(`    ✅ Mapped AI vote: ${normalizedGenre}_ai_id = ${lyricId}, ${normalizedGenre}_ai_vote = ${voteValue}`);
-      } else {
-        // Human (sega) lyric
-        votePayload[`${normalizedGenre}_sega_id`] = parseInt(lyricId);
-        votePayload[`${normalizedGenre}_sega_vote`] = voteValue;
-        console.log(`    ✅ Mapped Sega vote: ${normalizedGenre}_sega_id = ${lyricId}, ${normalizedGenre}_sega_vote = ${voteValue}`);
+      
+      if (GENRES.includes(normalizedGenre)) {
+        if (isAI) {
+          votePayload[`${normalizedGenre}_ai_id`] = String(lyricId);
+          votePayload[`${normalizedGenre}_ai_vote`] = voteValue;
+        } else {
+          // Ensure human IDs are stored as integers
+          votePayload[`${normalizedGenre}_sega_id`] = parseInt(lyricId);
+          votePayload[`${normalizedGenre}_sega_vote`] = voteValue;
+        }
       }
     });
 
-    console.log('📊 Final vote payload:');
-    console.log(JSON.stringify(votePayload, null, 2));
-
-    // Upsert to database
-    console.log('💾 Saving votes to database...');
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('session_votes')
-      .upsert(votePayload, {
-        onConflict: 'session_id'
-      });
+      .upsert(votePayload, { onConflict: 'session_id' });
 
-    if (error) {
-      console.error('❌ Database error:', error);
-      return Response.json({
-        success: false,
-        error: `Failed to save votes: ${error.message}`
-      }, { status: 500 });
-    }
+    if (error) throw error;
 
-    console.log('✅ Successfully saved votes to session_votes table');
-
-    return Response.json({
-      success: true,
-      session_id: session_id,
-      votes_saved: votes.length,
-      timestamp: new Date().toISOString()
-    });
-
+    return Response.json({ success: true, votes_saved: votes.length });
   } catch (error) {
-    console.error('❌ Error in save-votes API:', error);
-    return Response.json({
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    console.error('❌ API Error:', error);
+    return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 }

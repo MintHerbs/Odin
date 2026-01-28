@@ -149,3 +149,23 @@ export const saveVotes = async (sessionId, votes) => {
     throw error;
   }
 };
+
+// Check if AI lyrics are fully generated and ready
+export const checkAILyricsReady = async (sessionId) => {
+  try {
+    const response = await fetch(`/api/check-ai-ready?session_id=${sessionId}`);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Check AI ready API Error:', response.status, errorData);
+      return { ready: false, status: 'error' };
+    }
+
+    const data = await response.json();
+    console.log('🔍 AI Lyrics Status:', data);
+    return data;
+  } catch (error) {
+    console.error('Error checking AI lyrics readiness:', error);
+    return { ready: false, status: 'error' };
+  }
+};

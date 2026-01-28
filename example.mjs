@@ -99,7 +99,7 @@ IMPORTANT: Use the exact genre names in lowercase: ${randomizedGenres.join(', ')
     console.log("🚀 Sending request to OpenAI...");
     
     const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-nano",
       messages: [
         { 
           role: "system", 
