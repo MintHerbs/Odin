@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ModeratingScreen from './screen/ModerationFlow';
 import LoaderScreen from './screen/LoaderScreen';
 import Survey from './screen/survey';
-import { supabase } from './database/database';
+import ConclusionScreen from './screen/ConclusionScreen';
 import { generateSessionId, triggerBackgroundAI, mixLyricsForSession, checkAILyricsReady } from './utils/sessionUtils';
 
 export default function Home() {
@@ -102,6 +102,17 @@ export default function Home() {
     setView('loading');
   };
 
+  const handleSurveyComplete = () => {
+    console.log('✅ Survey completed! Moving to conclusion screen...');
+    setView('conclusion');
+  };
+
+  const handleConclusionComplete = () => {
+    console.log('✅ Conclusion screen completed! Thank you for participating.');
+    // Could redirect to a thank you page or reset the app
+    // For now, we'll just log it
+  };
+
   if (view === 'moderation') {
     return <ModeratingScreen sessionId={sessionId} onComplete={handleModerationComplete} />;
   }
@@ -111,7 +122,11 @@ export default function Home() {
   }
 
   if (view === 'survey') {
-    return <Survey records={mixedLyrics} sessionId={sessionId} />;
+    return <Survey records={mixedLyrics} sessionId={sessionId} onSurveyComplete={handleSurveyComplete} />;
+  }
+
+  if (view === 'conclusion') {
+    return <ConclusionScreen onComplete={handleConclusionComplete} />;
   }
 
   return null;

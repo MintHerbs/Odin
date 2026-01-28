@@ -66,10 +66,16 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
             // Last slide - Submit all collected votes
             setIsSubmitting(true);
             try {
+                console.log('📊 Submitting all votes to database...');
                 await saveVotes(sessionId, updatedVotes);
-                if (onSurveyComplete) onSurveyComplete();
+                console.log('✅ All votes saved successfully!');
+                
+                // Proceed to conclusion screen
+                if (onSurveyComplete) {
+                    onSurveyComplete();
+                }
             } catch (error) {
-                console.error("Submission failed:", error);
+                console.error("❌ Submission failed:", error);
                 setShowError(true);
             } finally {
                 setIsSubmitting(false);
