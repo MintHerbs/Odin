@@ -105,8 +105,17 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
             // Last slide, submit data and complete
             setIsSubmitting(true);
             try {
+                const age = calculateAge(birthday);
                 await submitSessionData(sessionId, birthday, segaFamiliarity, aiSentiment);
-                if (onComplete) onComplete();
+                
+                // Pass user preferences to parent component
+                if (onComplete) {
+                    onComplete({
+                        age,
+                        segaFamiliarity,
+                        aiSentiment
+                    });
+                }
             } catch (error) {
                 console.error('Error submitting session data:', error);
                 setErrorMessage('Failed to submit data. Please try again.');

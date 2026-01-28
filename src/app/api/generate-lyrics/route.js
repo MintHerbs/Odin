@@ -124,7 +124,9 @@ export async function POST(request) {
           celebration_ai_id: lyricsData.celebration_ai_id,
           celebration_ai_sega: lyricsData.celebration_ai_sega,
           tipik_ai_id: lyricsData.tipik_ai_id,
-          tipik_ai_sega: lyricsData.tipik_ai_sega
+          tipik_ai_sega: lyricsData.tipik_ai_sega,
+          seggae_ai_id: lyricsData.seggae_ai_id,
+          seggae_ai_sega: lyricsData.seggae_ai_sega
         })
         .eq('session_id', session_id);
 

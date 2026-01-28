@@ -1,45 +1,111 @@
 /**
- * Combines AI lyrics and Human lyrics into a single shuffled array.
- * Each object is tagged with a 'type' for later analysis.
+ * Fisher-Yates shuffle algorithm for true randomization
+ * @param {Array} array - Array to shuffle
+ * @returns {Array} Shuffled array
  */
-export const mixLyrics = (aiData, humanRecords) => {
-  // 1. Format Human Records from survey_data
-  const formattedHumans = humanRecords.map(rec => ({
-    id: rec.sid,
-    type: 'human',
-    genre: rec.genre,
-    lyrics: rec.lyrics,
-    color_code: rec.color_code,
-    lottie: rec.lottie
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+/**
+ * Mix human and AI lyrics into a single shuffled array
+ * @param {Array} humanLyrics - Array of 5 human lyric objects
+ * @param {Array} aiLyrics - Array of AI lyric objects (up to 5)
+ * @returns {Object} Object containing mixed array and metadata
+ */
+export const mixLyrics = (humanLyrics, aiLyrics) => {
+  try {
+    console.log('🎭 Mixing lyrics...');
+    console.log(`  Human lyrics: ${humanLyrics.length}`);
+    console.log(`  AI lyrics: ${aiLyrics.length}`);
+
+    // Validate inputs
+    if (!Array.isArray(humanLyrics) || humanLyrics.length === 0) {
+      throw new Error('humanLyrics must be a non-empty array');
+    }
+
+    if (!Array.isArray(aiLyrics)) {
+      throw new Error('aiLyrics must be an array');
+    }
+
+    // Ensure all human lyrics have is_ai flag
+    const markedHumanLyrics = humanLyrics.map(lyric => ({
+      ...lyric,
+      is_ai: false,
+      source: 'human'
+    }));
+
+    // Ensure all AI lyrics have is_ai flag
+    const markedAILyrics = aiLyrics.map(lyric => ({
+      ...lyric,
+      is_ai: true,
+      source: 'ai'
+    }));
+
+    // Merge the arrays
+    const mergedLyrics = [...markedHumanLyrics, ...markedAILyrics];
+
+    console.log(`📦 Total lyrics before shuffle: ${mergedLyrics.length}`);
+
+    // Perform true shuffle
+    const shuffledLyrics = shuffleArray(mergedLyrics);
+
+    // Add display index to each lyric
+    const indexedLyrics = shuffledLyrics.map((lyric, index) => ({
+      ...lyric,
+      displayIndex: index + 1
+    }));
+
+    console.log('✅ Lyrics mixed and shuffled successfully');
+    console.log('🎲 Shuffle order (for verification):');
+    indexedLyrics.forEach((lyric, index) => {
+      console.log(`  ${index + 1}. ${lyric.source.toUpperCase()} - Genre: ${lyric.genre}, ID: ${lyric.sid}`);
+    });
+
+    return {
+      mixedLyrics: indexedLyrics,
+      metadata: {
+        totalCount: indexedLyrics.length,
+        humanCount: markedHumanLyrics.length,
+        aiCount: markedAILyrics.length,
+        shuffleTimestamp: new Date().toISOString()
+      }
+    };
+
+  } catch (error) {
+    console.error('❌ Error in mixLyrics:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fallback function when AI lyrics are not available
+ * @param {Array} humanLyrics - Array of human lyric objects
+ * @returns {Object} Object containing human-only array and metadata
+ */
+export const fallbackToHumanOnly = (humanLyrics) => {
+  console.warn('⚠️  Falling back to human-only lyrics');
+  
+  const shuffledHumanLyrics = shuffleArray(humanLyrics).map((lyric, index) => ({
+    ...lyric,
+    is_ai: false,
+    source: 'human',
+    displayIndex: index + 1
   }));
 
-  // 2. Format AI Data from survey_ai_lyrics
-  const genres = ['politics', 'engager', 'romance', 'celebration', 'tipik', 'seggae'];
-  const formattedAI = [];
-
-  genres.forEach(genre => {
-    const text = aiData[`${genre}_ai_sega`];
-    const id = aiData[`${genre}_ai_id`];
-    
-    // Only include if the genre was generated (not marked as "-")
-    if (text && text !== "-") {
-      formattedAI.push({
-        id: id,
-        type: 'ai',
-        genre: genre,
-        lyrics: text,
-        color_code: 'ai', // Uses the 'ai' theme from APP_COLORS
-        lottie: genre
-      });
+  return {
+    mixedLyrics: shuffledHumanLyrics,
+    metadata: {
+      totalCount: shuffledHumanLyrics.length,
+      humanCount: shuffledHumanLyrics.length,
+      aiCount: 0,
+      fallbackMode: true,
+      shuffleTimestamp: new Date().toISOString()
     }
-  });
-
-  // 3. Combine and Shuffle (Fisher-Yates Shuffle)
-  const combined = [...formattedHumans, ...formattedAI];
-  for (let i = combined.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [combined[i], combined[j]] = [combined[j], combined[i]];
-  }
-
-  return combined;
+  };
 };

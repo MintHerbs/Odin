@@ -18,7 +18,9 @@ CREATE TABLE survey_ai_lyrics (
     celebration_ai_id TEXT,    -- Changed to TEXT
     celebration_ai_sega TEXT,
     tipik_ai_id TEXT,          -- Changed to TEXT
-    tipik_ai_sega TEXT
+    tipik_ai_sega TEXT,
+    seggae_ai_id TEXT,         -- Added seggae genre
+    seggae_ai_sega TEXT
 );
 
 -- 3. Session Votes Table

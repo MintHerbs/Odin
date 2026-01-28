@@ -88,3 +88,34 @@ export const triggerBackgroundAI = async (sessionId) => {
     throw error;
   }
 };
+
+// Mix lyrics based on user preferences
+export const mixLyricsForSession = async (sessionId, age, segaFamiliarity, aiSentiment) => {
+  try {
+    console.log('🎭 Requesting mixed lyrics for session:', sessionId);
+    
+    const response = await fetch('/api/mix-lyrics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        age: age,
+        segaFamiliarity: segaFamiliarity,
+        aiSentiment: aiSentiment
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Mix lyrics API Error:', response.status, errorData);
+      throw new Error(`Failed to mix lyrics: ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Mixed lyrics received:', data.metadata);
+    return data;
+  } catch (error) {
+    console.error('Error mixing lyrics:', error);
+    throw error;
+  }
+};
