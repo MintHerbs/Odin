@@ -36,13 +36,22 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
     const [votes, setVotes] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showError, setShowError] = useState(false);
+    const [showLyricsModal, setShowLyricsModal] = useState(false);
 
     const totalSlides = records.length;
     const currentRecord = records[currentSlide];
 
+    // Validate that we have exactly 10 records
+    if (totalSlides !== 10) {
+        console.error(`❌ CRITICAL: Expected exactly 10 lyrics, got ${totalSlides}`);
+    }
+
     const handleNext = async () => {
         if (activeIndex === null) {
             setShowError(true);
+            setTimeout(() => {
+                setShowError(false);
+            }, 3000);
             return;
         }
 
@@ -51,23 +60,37 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
             lyricId: currentRecord.sid || currentRecord.id, // Handles Human (sid) or AI (id)
             genre: currentRecord.genre,
             vote: activeIndex,
-            isAI: currentRecord.type === 'ai' || currentRecord.is_ai === true
+            isAI: currentRecord.type === 'ai' || currentRecord.is_ai === true,
+            lottie: currentRecord.lottie // Include lottie for genre mapping
         };
 
-        // functional update to guarantee we have all votes for submission
-        const updatedVotes = [...votes, currentVote];
-        setVotes(updatedVotes);
-
         if (currentSlide < totalSlides - 1) {
+            // Not the final slide - just add vote and move to next
+            setVotes(prev => [...prev, currentVote]);
             setCurrentSlide(prev => prev + 1);
             setActiveIndex(null);
             setShowError(false);
         } else {
-            // Last slide - Submit all collected votes
+            // FINAL SLIDE - Combine all votes including current one
             setIsSubmitting(true);
             try {
+                // CRITICAL: Combine existing votes with the final vote
+                const finalVotes = [...votes, currentVote];
+                
                 console.log('📊 Submitting all votes to database...');
-                await saveVotes(sessionId, updatedVotes);
+                console.log(`✅ Total votes collected: ${finalVotes.length}`);
+                
+                // Validate we have exactly 10 votes
+                if (finalVotes.length !== 10) {
+                    throw new Error(`Expected exactly 10 votes, got ${finalVotes.length}`);
+                }
+                
+                // Count human vs AI votes for verification
+                const humanVotes = finalVotes.filter(v => !v.isAI).length;
+                const aiVotes = finalVotes.filter(v => v.isAI).length;
+                console.log(`👤 Human votes: ${humanVotes}, 🤖 AI votes: ${aiVotes}`);
+                
+                await saveVotes(sessionId, finalVotes);
                 console.log('✅ All votes saved successfully!');
                 
                 // Proceed to conclusion screen
@@ -77,7 +100,6 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
             } catch (error) {
                 console.error("❌ Submission failed:", error);
                 setShowError(true);
-            } finally {
                 setIsSubmitting(false);
             }
         }
@@ -91,12 +113,25 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
         }
     };
 
+    // Format lyrics with proper line breaks
+    const formatLyrics = (lyrics) => {
+        if (!lyrics) return '';
+        // Replace \n with actual line breaks
+        return lyrics.split('\\n').map((line, index, array) => (
+            <span key={index}>
+                {line}
+                {index < array.length - 1 && <br />}
+            </span>
+        ));
+    };
+
     if (!currentRecord) return null;
 
     const theme = APP_COLORS[currentRecord.color_code] || APP_COLORS.blue;
 
     return (
-        <Background bgColor={theme.background}>
+        <>
+            <Background bgColor={theme.background}>
             <StackCard
                 baseColor={theme.primary}
                 baseHeight={520}
@@ -116,8 +151,30 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
 
                 <TitleText>How do you rate these lyrics? (Genre: {currentRecord.genre})</TitleText>
                 
-                <div style={{ maxHeight: '120px', overflowY: 'auto', margin: '10px 0', padding: '10px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '8px' }}>
-                    <SubText>{currentRecord.lyrics}</SubText>
+                <div 
+                    onClick={() => setShowLyricsModal(true)}
+                    style={{ 
+                        maxHeight: '120px', 
+                        overflowY: 'auto', 
+                        margin: '10px 0', 
+                        padding: '10px', 
+                        backgroundColor: 'rgba(255,255,255,0.3)', 
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        border: '2px solid transparent',
+                        whiteSpace: 'pre-wrap'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.4)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)';
+                        e.currentTarget.style.borderColor = 'transparent';
+                    }}
+                >
+                    <SubText>{formatLyrics(currentRecord.lyrics)}</SubText>
                 </div>
 
                 <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '10px' }}>
@@ -131,18 +188,118 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
                     ))}
                 </div>
 
-                <div style={{ marginTop: 'auto', alignSelf: 'flex-end', display: 'flex', gap: '10px', paddingTop: '20px' }}>
+                <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                     {showError && (
-                        <span style={{ color: 'red', fontSize: '12px' }}>
-                            {isSubmitting ? 'Saving...' : 'Please select a rating'}
-                        </span>
+                        <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
+                            {isSubmitting ? 'Saving...' : 'Please complete this step to continue'}
+                        </div>
                     )}
-                    <PreviousButton onPress={handlePrevious} disabled={isSubmitting} />
-                    <NavigationButton onPress={handleNext} disabled={isSubmitting} />
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <PreviousButton onPress={handlePrevious} disabled={isSubmitting} />
+                        <NavigationButton onPress={handleNext} disabled={isSubmitting} />
+                    </div>
                 </div>
             </StackCard>
         </Background>
+
+        {/* Lyrics Modal */}
+        {showLyricsModal && (
+            <div 
+                style={styles.modalOverlay}
+                onClick={() => setShowLyricsModal(false)}
+            >
+                <div 
+                    style={styles.modalContent}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div style={styles.modalHeader}>
+                        <TitleText>{currentRecord.genre} Lyrics</TitleText>
+                        <button 
+                            onClick={() => setShowLyricsModal(false)}
+                            className="modal-close-btn"
+                            style={styles.closeButton}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <div style={styles.modalBody}>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>
+                            {formatLyrics(currentRecord.lyrics)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
+};
+
+const styles = {
+    navContainer: {
+        marginTop: 'auto',
+        alignSelf: 'flex-end',
+        display: 'flex',
+        gap: '10px',
+        paddingTop: '20px'
+    },
+    modalOverlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+        animation: 'fadeIn 0.2s ease-in-out'
+    },
+    modalContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: '16px',
+        padding: '30px',
+        width: '500px',
+        maxHeight: '80vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+        animation: 'slideUp 0.3s ease-out'
+    },
+    modalHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        paddingBottom: '15px',
+        borderBottom: '2px solid #E0E0E0'
+    },
+    closeButton: {
+        background: 'none',
+        border: 'none',
+        fontSize: '28px',
+        cursor: 'pointer',
+        color: '#666',
+        padding: '0',
+        width: '32px',
+        height: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '50%',
+        transition: 'all 0.2s ease'
+    },
+    modalBody: {
+        overflowY: 'auto',
+        flex: 1,
+        padding: '10px 0',
+        lineHeight: '1.8',
+        fontSize: '15px',
+        color: '#1F2429',
+        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+    }
 };
 
 export default Survey;

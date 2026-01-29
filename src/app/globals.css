@@ -159,3 +159,30 @@ body {
   width: 34px !important;
   height: 34px !important;
 }
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Close Button Hover */
+.modal-close-btn:hover {
+  background-color: #F0F0F0;
+  color: #333;
+}

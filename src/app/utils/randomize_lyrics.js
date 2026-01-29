@@ -100,7 +100,8 @@ export const selectHumanLyrics = async (userPreferences) => {
       .map(({ selectionScore, ...lyric }) => ({
         ...lyric,
         is_ai: false, // Mark as human-generated
-        source: 'human'
+        source: 'human',
+        lottie: lyric.lottie || lyric.genre?.toLowerCase() // Add lottie field for genre mapping
       }));
 
     // Extract the SIDs for storage
@@ -126,8 +127,9 @@ export const selectHumanLyrics = async (userPreferences) => {
 
 /**
  * Fetch AI-generated lyrics for a specific session
+ * STRICT: Returns exactly 5 AI lyrics (excludes 1 random genre)
  * @param {string} sessionId - The session ID
- * @returns {Promise<Array>} Array of AI lyric objects
+ * @returns {Promise<Array>} Array of exactly 5 AI lyric objects
  */
 export const fetchAILyrics = async (sessionId) => {
   try {
@@ -153,28 +155,46 @@ export const fetchAILyrics = async (sessionId) => {
     }
 
     // Transform the flat structure into an array of lyric objects
-    const aiLyrics = [];
+    const allAILyrics = [];
     const genres = ['politics', 'engager', 'romance', 'celebration', 'tipik', 'seggae'];
 
-    genres.forEach((genre, index) => {
+    genres.forEach((genre) => {
       const idField = `${genre}_ai_id`;
       const segaField = `${genre}_ai_sega`;
 
       if (data[idField] && data[segaField] && data[segaField] !== '-') {
-        aiLyrics.push({
+        allAILyrics.push({
           sid: data[idField],
           genre: genre.charAt(0).toUpperCase() + genre.slice(1),
           lyrics: data[segaField],
           is_ai: true,
           source: 'ai',
-          session_id: sessionId
+          session_id: sessionId,
+          lottie: genre // Add lottie field for genre mapping
         });
       }
     });
 
-    console.log(`✅ Found ${aiLyrics.length} AI-generated lyrics`);
+    console.log(`📊 Found ${allAILyrics.length} AI-generated lyrics`);
 
-    return aiLyrics;
+    // STRICT: Return exactly 5 AI lyrics
+    // If we have 6, randomly exclude 1 genre
+    if (allAILyrics.length === 6) {
+      const randomIndex = Math.floor(Math.random() * 6);
+      const excludedLyric = allAILyrics[randomIndex];
+      const selectedAILyrics = allAILyrics.filter((_, index) => index !== randomIndex);
+      
+      console.log(`🎲 Randomly excluding AI genre: ${excludedLyric.genre}`);
+      console.log(`✅ Returning exactly 5 AI lyrics`);
+      
+      return selectedAILyrics;
+    } else if (allAILyrics.length === 5) {
+      console.log(`✅ Already have exactly 5 AI lyrics`);
+      return allAILyrics;
+    } else {
+      console.warn(`⚠️  Expected 5-6 AI lyrics, got ${allAILyrics.length}`);
+      return allAILyrics.slice(0, 5); // Take first 5 as fallback
+    }
 
   } catch (error) {
     console.error('❌ Error in fetchAILyrics:', error);

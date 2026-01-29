@@ -1,44 +1,20 @@
-
-
--- 3. Session Votes Table
-CREATE TABLE session_votes (
-    session_id TEXT PRIMARY KEY,
+CREATE TABLE votes (
+    id BIGSERIAL PRIMARY KEY,
+    session_id UUID NOT NULL,
+    genre TEXT NOT NULL,
+    is_ai BOOLEAN NOT NULL,
     
-    -- Politics
-    politics_ai_id TEXT,
-    politics_ai_vote INT4,
-    politics_sega_id INT4,
-    politics_sega_vote INT4,
+    -- Human (Sega) IDs are integers, AI IDs are strings
+    sega_id INT4,
+    ai_id TEXT,
     
-    -- Engager
-    engager_ai_id TEXT,
-    engager_ai_vote INT4,
-    engager_sega_id INT4,
-    engager_sega_vote INT4,
-    
-    -- Romance
-    romance_ai_id TEXT,
-    romance_ai_vote INT4,
-    romance_sega_id INT4,
-    romance_sega_vote INT4,
-    
-    -- Celebration
-    celebration_ai_id TEXT,
-    celebration_ai_vote INT4,
-    celebration_sega_id INT4,
-    celebration_sega_vote INT4,
-    
-    -- Tipik
-    tipik_ai_id TEXT,
-    tipik_ai_vote INT4,
-    tipik_sega_id INT4,
-    tipik_sega_vote INT4,
-    
-    -- Seggae
-    seggae_ai_id TEXT,
-    seggae_ai_vote INT4,
-    seggae_sega_id INT4,
-    seggae_sega_vote INT4,
-
+    vote_value INT2 NOT NULL CHECK (vote_value >= 1 AND vote_value <= 5),
     created_at TIMESTAMPTZ DEFAULT NOW()
+    
+    -- If you ever want to add the constraint back, 
+    -- you must put a comma after created_at first.
 );
+
+-- Add indexes for faster querying
+CREATE INDEX idx_votes_session_id ON votes(session_id);
+CREATE INDEX idx_votes_genre ON votes(genre);

@@ -14,8 +14,9 @@ const shuffleArray = (array) => {
 
 /**
  * Mix human and AI lyrics into a single shuffled array
+ * STRICT: Returns exactly 10 lyrics (5 Human + 5 AI)
  * @param {Array} humanLyrics - Array of 5 human lyric objects
- * @param {Array} aiLyrics - Array of AI lyric objects (up to 5)
+ * @param {Array} aiLyrics - Array of AI lyric objects (will be limited to 5)
  * @returns {Object} Object containing mixed array and metadata
  */
 export const mixLyrics = (humanLyrics, aiLyrics) => {
@@ -25,13 +26,22 @@ export const mixLyrics = (humanLyrics, aiLyrics) => {
     console.log(`  AI lyrics: ${aiLyrics.length}`);
 
     // Validate inputs
-    if (!Array.isArray(humanLyrics) || humanLyrics.length === 0) {
-      throw new Error('humanLyrics must be a non-empty array');
+    if (!Array.isArray(humanLyrics) || humanLyrics.length !== 5) {
+      throw new Error(`humanLyrics must contain exactly 5 items, got ${humanLyrics?.length || 0}`);
     }
 
     if (!Array.isArray(aiLyrics)) {
       throw new Error('aiLyrics must be an array');
     }
+
+    // STRICT: Limit AI lyrics to exactly 5
+    const limitedAILyrics = aiLyrics.slice(0, 5);
+    
+    if (limitedAILyrics.length !== 5) {
+      console.warn(`⚠️  Expected 5 AI lyrics, got ${limitedAILyrics.length}. Padding may be needed.`);
+    }
+
+    console.log(`✅ Using ${limitedAILyrics.length} AI lyrics (limited to 5)`);
 
     // Ensure all human lyrics have is_ai flag
     const markedHumanLyrics = humanLyrics.map(lyric => ({
@@ -41,16 +51,20 @@ export const mixLyrics = (humanLyrics, aiLyrics) => {
     }));
 
     // Ensure all AI lyrics have is_ai flag
-    const markedAILyrics = aiLyrics.map(lyric => ({
+    const markedAILyrics = limitedAILyrics.map(lyric => ({
       ...lyric,
       is_ai: true,
       source: 'ai'
     }));
 
-    // Merge the arrays
+    // Merge the arrays - MUST be exactly 10 items
     const mergedLyrics = [...markedHumanLyrics, ...markedAILyrics];
 
-    console.log(`📦 Total lyrics before shuffle: ${mergedLyrics.length}`);
+    if (mergedLyrics.length !== 10) {
+      throw new Error(`Expected exactly 10 lyrics, got ${mergedLyrics.length} (${markedHumanLyrics.length} human + ${markedAILyrics.length} AI)`);
+    }
+
+    console.log(`📦 Total lyrics before shuffle: ${mergedLyrics.length} ✅`);
 
     // Perform true shuffle
     const shuffledLyrics = shuffleArray(mergedLyrics);

@@ -5,58 +5,121 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
-// All 6 genres for the study
-const GENRES = ['politics', 'engager', 'romance', 'celebration', 'tipik', 'seggae'];
-
 export async function POST(request) {
   try {
     const body = await request.json();
     const { session_id, votes } = body;
 
+    console.log('🗳️  Processing votes for session:', session_id);
+    console.log(`📊 Total votes received: ${votes?.length || 0}`);
+
     if (!session_id || !votes) {
       return Response.json({ error: 'Missing session_id or votes' }, { status: 400 });
     }
 
-    // Initialize payload with default values for all genres
-    const votePayload = { session_id: session_id };
+    // STRICT VALIDATION: Must have exactly 10 votes
+    if (votes.length !== 10) {
+      console.error(`❌ Expected exactly 10 votes, got ${votes.length}`);
+      return Response.json({ 
+        error: `Expected exactly 10 votes, got ${votes.length}`,
+        votes_received: votes.length 
+      }, { status: 400 });
+    }
 
-    GENRES.forEach(genre => {
-      // AI Columns
-      votePayload[`${genre}_ai_id`] = "-";
-      votePayload[`${genre}_ai_vote`] = null;
-      // Human (Sega) Columns
-      votePayload[`${genre}_sega_id`] = null;
-      votePayload[`${genre}_sega_vote`] = null;
-    });
+    // Count human vs AI votes
+    const humanVotes = votes.filter(v => !v.isAI);
+    const aiVotes = votes.filter(v => v.isAI);
+    
+    console.log(`👤 Human votes: ${humanVotes.length}`);
+    console.log(`🤖 AI votes: ${aiVotes.length}`);
 
-    // Map the array of votes into the flat table structure
-    votes.forEach((vote) => {
-      const { lyricId, genre, vote: voteValue, isAI } = vote;
-      if (!genre) return;
+    // Validate we have 5 of each
+    if (humanVotes.length !== 5 || aiVotes.length !== 5) {
+      console.warn(`⚠️  Expected 5 human and 5 AI votes, got ${humanVotes.length} human and ${aiVotes.length} AI`);
+    }
 
-      const normalizedGenre = genre.toLowerCase().trim();
+    // Transform votes array into normalized rows for the 'votes' table
+    const voteRows = votes.map((vote, index) => {
+      const { lyricId, genre, vote: voteValue, isAI, lottie } = vote;
       
-      if (GENRES.includes(normalizedGenre)) {
-        if (isAI) {
-          votePayload[`${normalizedGenre}_ai_id`] = String(lyricId);
-          votePayload[`${normalizedGenre}_ai_vote`] = voteValue;
-        } else {
-          // Ensure human IDs are stored as integers
-          votePayload[`${normalizedGenre}_sega_id`] = parseInt(lyricId);
-          votePayload[`${normalizedGenre}_sega_vote`] = voteValue;
-        }
+      // Use lottie field for genre mapping (more reliable)
+      const genreKey = lottie || genre;
+      const normalizedGenre = genreKey ? genreKey.toLowerCase().trim() : null;
+
+      if (!normalizedGenre) {
+        console.warn(`⚠️  Vote ${index + 1} missing genre/lottie field:`, vote);
       }
+
+      // Build the row object for normalized table
+      const row = {
+        session_id: session_id,
+        genre: normalizedGenre,
+        is_ai: Boolean(isAI),
+        vote_value: parseInt(voteValue)
+      };
+
+      // Type-safe ID assignment
+      if (isAI) {
+        // AI lyrics: ai_id as string, sega_id as null
+        row.ai_id = String(lyricId);
+        row.sega_id = null;
+        console.log(`  ✅ Row ${index + 1}: AI vote - Genre: ${normalizedGenre}, ID: ${lyricId}, Vote: ${voteValue}`);
+      } else {
+        // Human lyrics: sega_id as integer, ai_id as null
+        const humanId = parseInt(lyricId);
+        if (isNaN(humanId)) {
+          console.error(`❌ Invalid human lyric ID at vote ${index + 1}: ${lyricId}`);
+          row.sega_id = null;
+        } else {
+          row.sega_id = humanId;
+        }
+        row.ai_id = null;
+        console.log(`  ✅ Row ${index + 1}: Human vote - Genre: ${normalizedGenre}, SID: ${row.sega_id}, Vote: ${voteValue}`);
+      }
+
+      return row;
     });
 
-    const { error } = await supabase
-      .from('session_votes')
-      .upsert(votePayload, { onConflict: 'session_id' });
+    console.log(`📦 Prepared ${voteRows.length} rows for insertion`);
 
-    if (error) throw error;
+    // Batch insert all 10 rows into the normalized 'votes' table
+    const { data, error } = await supabase
+      .from('votes')
+      .insert(voteRows);
 
-    return Response.json({ success: true, votes_saved: votes.length });
+    if (error) {
+      console.error('❌ Database insertion error:', error);
+      throw error;
+    }
+
+    console.log('✅ All votes saved to database successfully');
+    console.log(`📊 Summary:`);
+    console.log(`   - Total rows inserted: ${voteRows.length}`);
+    console.log(`   - Human votes: ${humanVotes.length}`);
+    console.log(`   - AI votes: ${aiVotes.length}`);
+
+    // Log genre distribution
+    const genreCount = {};
+    voteRows.forEach(row => {
+      genreCount[row.genre] = (genreCount[row.genre] || 0) + 1;
+    });
+    console.log(`   - Genre distribution:`, genreCount);
+
+    return Response.json({ 
+      success: true, 
+      session_id: session_id,
+      votes_inserted: voteRows.length,
+      human_votes: humanVotes.length,
+      ai_votes: aiVotes.length,
+      genre_distribution: genreCount
+    });
+
   } catch (error) {
     console.error('❌ API Error:', error);
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return Response.json({ 
+      success: false, 
+      error: error.message,
+      details: error.details || null
+    }, { status: 500 });
   }
 }
