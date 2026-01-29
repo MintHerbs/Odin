@@ -82,6 +82,20 @@ export async function POST(request) {
 
     console.log(`📦 Prepared ${voteRows.length} rows for insertion`);
 
+    // ATOMIC REFRESH: Delete existing votes for this session before inserting new ones
+    console.log(`🗑️  Deleting existing votes for session: ${session_id}`);
+    const { error: deleteError } = await supabase
+      .from('votes')
+      .delete()
+      .eq('session_id', session_id);
+
+    if (deleteError) {
+      console.error('❌ Error deleting existing votes:', deleteError);
+      throw deleteError;
+    }
+
+    console.log('✅ Existing votes cleared');
+
     // Batch insert all 10 rows into the normalized 'votes' table
     const { data, error } = await supabase
       .from('votes')

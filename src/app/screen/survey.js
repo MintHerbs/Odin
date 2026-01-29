@@ -57,40 +57,58 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
 
         // Prepare the current vote object
         const currentVote = {
-            lyricId: currentRecord.sid || currentRecord.id, // Handles Human (sid) or AI (id)
+            lyricId: currentRecord.sid || currentRecord.id,
             genre: currentRecord.genre,
             vote: activeIndex,
             isAI: currentRecord.type === 'ai' || currentRecord.is_ai === true,
-            lottie: currentRecord.lottie // Include lottie for genre mapping
+            lottie: currentRecord.lottie
         };
 
         if (currentSlide < totalSlides - 1) {
-            // Not the final slide - just add vote and move to next
-            setVotes(prev => [...prev, currentVote]);
+            // Check if vote for this slide already exists
+            const existingVoteIndex = votes.findIndex((v, idx) => idx === currentSlide);
+            
+            if (existingVoteIndex !== -1) {
+                // Update existing vote
+                setVotes(prev => {
+                    const updated = [...prev];
+                    updated[currentSlide] = currentVote;
+                    return updated;
+                });
+            } else {
+                // Add new vote
+                setVotes(prev => [...prev, currentVote]);
+            }
+            
             setCurrentSlide(prev => prev + 1);
-            setActiveIndex(null);
+            
+            // Set activeIndex to existing vote if navigating to a slide with a vote
+            const nextSlideVote = votes[currentSlide + 1];
+            setActiveIndex(nextSlideVote ? nextSlideVote.vote : null);
+            
             setShowError(false);
         } else {
             // FINAL SLIDE - Combine all votes including current one
             setIsSubmitting(true);
             try {
-                // CRITICAL: Combine existing votes with the final vote
-                const finalVotes = [...votes, currentVote];
+                // Update or add the final vote
+                const updatedVotes = [...votes];
+                updatedVotes[currentSlide] = currentVote;
                 
                 console.log('📊 Submitting all votes to database...');
-                console.log(`✅ Total votes collected: ${finalVotes.length}`);
+                console.log(`✅ Total votes collected: ${updatedVotes.length}`);
                 
                 // Validate we have exactly 10 votes
-                if (finalVotes.length !== 10) {
-                    throw new Error(`Expected exactly 10 votes, got ${finalVotes.length}`);
+                if (updatedVotes.length !== 10) {
+                    throw new Error(`Expected exactly 10 votes, got ${updatedVotes.length}`);
                 }
                 
                 // Count human vs AI votes for verification
-                const humanVotes = finalVotes.filter(v => !v.isAI).length;
-                const aiVotes = finalVotes.filter(v => v.isAI).length;
+                const humanVotes = updatedVotes.filter(v => !v.isAI).length;
+                const aiVotes = updatedVotes.filter(v => v.isAI).length;
                 console.log(`👤 Human votes: ${humanVotes}, 🤖 AI votes: ${aiVotes}`);
                 
-                await saveVotes(sessionId, finalVotes);
+                await saveVotes(sessionId, updatedVotes);
                 console.log('✅ All votes saved successfully!');
                 
                 // Proceed to conclusion screen
@@ -107,9 +125,12 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
 
     const handlePrevious = () => {
         if (currentSlide > 0) {
-            setCurrentSlide(prev => prev - 1);
-            // Optional: Logic to pop the last vote from state if returning
-            setActiveIndex(null);
+            const previousSlide = currentSlide - 1;
+            setCurrentSlide(previousSlide);
+            
+            // Restore the previous vote if it exists
+            const previousVote = votes[previousSlide];
+            setActiveIndex(previousVote ? previousVote.vote : null);
         }
     };
 

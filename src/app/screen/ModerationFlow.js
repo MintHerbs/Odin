@@ -20,6 +20,7 @@ import engager from '../lottie/engager.json';
 import tipik from '../lottie/tipik.json';
 import birthdayLottie from '../lottie/birthday.json';
 import segaLottie from '../lottie/sega.json';
+import alertLottie from '../lottie/alert.json';
 
 // Import Icons
 import calendarIcon from '../reaction/calender.png';
@@ -42,7 +43,8 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const totalSlides = 4;
+    const [showInstructionModal, setShowInstructionModal] = useState(false);
+    const totalSlides = 5;
 
     // Calculate age from birthday
     const calculateAge = (birthdayString) => {
@@ -76,12 +78,12 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
         let isValid = true;
         let errorMsg = 'Please complete this step to continue';
 
-        if (currentSlide === 1) {
+        if (currentSlide === 2) {
             isValid = validateBirthday();
             // Error message is set by validateBirthday function
-        } else if (currentSlide === 2 && segaFamiliarity === null) {
+        } else if (currentSlide === 3 && segaFamiliarity === null) {
             isValid = false;
-        } else if (currentSlide === 3 && aiSentiment === null) {
+        } else if (currentSlide === 4 && aiSentiment === null) {
             isValid = false;
         }
 
@@ -140,9 +142,10 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const getTheme = () => {
         switch (currentSlide) {
             case 0: return APP_COLORS.blue;
-            case 1: return APP_COLORS.birthday;
-            case 2: return APP_COLORS.sega;
-            case 3: return APP_COLORS.ai;
+            case 1: return APP_COLORS.instruction;
+            case 2: return APP_COLORS.birthday;
+            case 3: return APP_COLORS.sega;
+            case 4: return APP_COLORS.ai;
             default: return APP_COLORS.blue;
         }
     };
@@ -152,14 +155,16 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const getLottie = () => {
         switch (currentSlide) {
             case 0: return moonAnimation;
-            case 1: return birthdayLottie;
-            case 2: return segaLottie;
-            case 3: return tipik;
+            case 1: return alertLottie;
+            case 2: return birthdayLottie;
+            case 3: return segaLottie;
+            case 4: return tipik;
             default: return moonAnimation;
         }
     };
 
     return (
+        <>
         <Background bgColor={theme.background}>
             <StackCard
                 baseColor={theme.primary}
@@ -188,8 +193,42 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </>
                 )}
 
-                {/* Page 2: Age Selection */}
+                {/* Page 2: Instructions */}
                 {currentSlide === 1 && (
+                    <>
+                        <TitleText>How will this survey be conducted?</TitleText>
+                        <div 
+                            onClick={() => setShowInstructionModal(true)}
+                            style={{ 
+                                maxHeight: '200px', 
+                                overflowY: 'auto', 
+                                margin: '10px 0', 
+                                padding: '15px', 
+                                backgroundColor: 'rgba(255,255,255,0.3)', 
+                                borderRadius: '8px',
+                                whiteSpace: 'pre-wrap',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                border: '2px solid transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.4)';
+                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)';
+                                e.currentTarget.style.borderColor = 'transparent';
+                            }}
+                        >
+                            <SubText>
+                                {'We will present you with 10 sets of lyrics (3 verses each). These consist of a mixture of human-written Sega lyrics and specialized AI-generated lyrics.\n\nYour task is to read each one and rate your confidence:\n\n1 = Definitely Human\n5 = Definitely AI\n\nNote: You will always be presented with both types of lyrics throughout the session, though the distribution may vary.\n\n💡 TIP: You can click on any lyric container for an expanded view.'}
+                            </SubText>
+                        </div>
+                    </>
+                )}
+
+                {/* Page 3: Age Selection */}
+                {currentSlide === 2 && (
                     <>
                         <TitleText>When is your birthday?</TitleText>
                         <div style={styles.dateInputContainer}>
@@ -209,8 +248,8 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </>
                 )}
 
-                {/* Page 3: Sega Familiarity */}
-                {currentSlide === 2 && (
+                {/* Page 4: Sega Familiarity */}
+                {currentSlide === 3 && (
                     <>
                         <TitleText>How familiar are you with Mauritian sega on a scale of 1-5?</TitleText>
                         <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
@@ -226,8 +265,8 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </>
                 )}
 
-                {/* Page 4: AI Sentiment */}
-                {currentSlide === 3 && (
+                {/* Page 5: AI Sentiment */}
+                {currentSlide === 4 && (
                     <>
                         <TitleText>How do you feel about Ai in the art industry?</TitleText>
                         <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
@@ -263,6 +302,36 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 </div>
             </StackCard>
         </Background>
+
+        {/* Instruction Modal */}
+        {showInstructionModal && (
+            <div 
+                style={styles.modalOverlay}
+                onClick={() => setShowInstructionModal(false)}
+            >
+                <div 
+                    style={styles.modalContent}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div style={styles.modalHeader}>
+                        <TitleText>How will this survey be conducted?</TitleText>
+                        <button 
+                            onClick={() => setShowInstructionModal(false)}
+                            className="modal-close-btn"
+                            style={styles.closeButton}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <div style={styles.modalBody}>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>
+                            {'We will present you with 10 sets of lyrics (3 verses each). These consist of a mixture of human-written Sega lyrics and specialized AI-generated lyrics.\n\nYour task is to read each one and rate your confidence:\n\n1 = Definitely Human\n5 = Definitely AI\n\nNote: You will always be presented with both types of lyrics throughout the session, though the distribution may vary.\n\n💡 TIP: You can click on any lyric container for an expanded view.'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+    </>
     );
 };
 
@@ -318,6 +387,64 @@ const styles = {
         marginTop: '10px',
         textAlign: 'center',
         opacity: 0.8
+    },
+    modalOverlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+        animation: 'fadeIn 0.2s ease-in-out'
+    },
+    modalContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: '16px',
+        padding: '30px',
+        width: '500px',
+        maxHeight: '80vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+        animation: 'slideUp 0.3s ease-out'
+    },
+    modalHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        paddingBottom: '15px',
+        borderBottom: '2px solid #E0E0E0'
+    },
+    closeButton: {
+        background: 'none',
+        border: 'none',
+        fontSize: '28px',
+        cursor: 'pointer',
+        color: '#666',
+        padding: '0',
+        width: '32px',
+        height: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '50%',
+        transition: 'all 0.2s ease'
+    },
+    modalBody: {
+        overflowY: 'auto',
+        flex: 1,
+        padding: '10px 0',
+        lineHeight: '1.8',
+        fontSize: '15px',
+        color: '#1F2429',
+        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
     }
 };
 

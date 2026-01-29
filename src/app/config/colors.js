@@ -49,6 +49,11 @@ export const APP_COLORS = {
     secondary: '#FCF7E8',
     background: '#FDFAEF',
   },
+  instruction: {
+    primary: '#FF9F43',
+    secondary: '#FFE5D0',
+    background: '#FFF8F0',
+  },
   btn: {
     btn_inactive: '#D9D9D9',
   },
