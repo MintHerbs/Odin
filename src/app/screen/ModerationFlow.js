@@ -21,6 +21,7 @@ import tipik from '../lottie/tipik.json';
 import birthdayLottie from '../lottie/birthday.json';
 import segaLottie from '../lottie/sega.json';
 import alertLottie from '../lottie/alert.json';
+import aiLottie from '../lottie/ai.json';
 
 // Import Icons
 import calendarIcon from '../reaction/calender.png';
@@ -158,7 +159,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
             case 1: return alertLottie;
             case 2: return birthdayLottie;
             case 3: return segaLottie;
-            case 4: return tipik;
+            case 4: return aiLottie;
             default: return moonAnimation;
         }
     };

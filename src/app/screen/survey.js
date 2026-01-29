@@ -20,6 +20,7 @@ import politics from '../lottie/politics.json';
 import tipik from '../lottie/tipik.json';
 import romance from '../lottie/romance.json';
 import sega from '../lottie/sega.json';
+import seggae from '../lottie/seggae.json';
 
 const LOTTIE_MAP = {
     celebration,
@@ -27,7 +28,7 @@ const LOTTIE_MAP = {
     politics,
     tipik,
     romance,
-    seggae: sega
+    seggae: seggae
 };
 
 const Survey = ({ records, sessionId, onSurveyComplete }) => {
