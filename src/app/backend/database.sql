@@ -18,3 +18,15 @@ CREATE TABLE votes (
 -- Add indexes for faster querying
 CREATE INDEX idx_votes_session_id ON votes(session_id);
 CREATE INDEX idx_votes_genre ON votes(genre);
+
+-- Session trackers table for one-vote-per-user enforcement
+CREATE TABLE session_trackers (
+    id BIGSERIAL PRIMARY KEY,
+    ip_address TEXT NOT NULL UNIQUE,
+    session_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add index for faster IP lookups
+CREATE INDEX idx_session_trackers_ip ON session_trackers(ip_address);
+CREATE INDEX idx_session_trackers_session ON session_trackers(session_id);

@@ -1,5 +1,27 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+);
+
+const WHITELIST_IP = '102.115.222.233';
+
+// Helper to extract IP from request
+function getClientIP(request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  if (realIP) {
+    return realIP;
+  }
+  return null;
+}
 
 export async function POST(request) {
   try {
@@ -8,6 +30,30 @@ export async function POST(request) {
 
     if (!session_id) {
       return Response.json({ error: 'session_id is required' }, { status: 400 });
+    }
+
+    // API PROTECTION: Check if IP has already voted
+    const clientIP = getClientIP(request);
+    console.log(`📍 Request from IP: ${clientIP || 'unknown'}`);
+
+    if (clientIP && clientIP !== WHITELIST_IP) {
+      console.log('🔍 Checking if IP has already used API...');
+      
+      const { data, error } = await supabase
+        .from('session_trackers')
+        .select('*')
+        .eq('ip_address', clientIP)
+        .single();
+
+      if (data && !error) {
+        console.log('🚫 IP has already voted - blocking API access');
+        return Response.json({ 
+          error: 'Access denied: You have already participated',
+          code: 'ALREADY_VOTED'
+        }, { status: 403 });
+      }
+    } else if (clientIP === WHITELIST_IP) {
+      console.log('✅ Whitelisted IP - bypassing check');
     }
 
     console.log(`🚀 Triggering background AI generation for session: ${session_id}`);

@@ -6,6 +6,7 @@ import LoaderScreen from './screen/LoaderScreen';
 import Survey from './screen/survey';
 import ConclusionScreen from './screen/ConclusionScreen';
 import { generateSessionId, triggerBackgroundAI, mixLyricsForSession, checkAILyricsReady } from './utils/sessionUtils';
+import { getUserIP, checkVoteStatus, lockVote } from './utils/ipUtils';
 
 export default function Home() {
   const [view, setView] = useState('moderation');
@@ -13,20 +14,72 @@ export default function Home() {
   const [userPreferences, setUserPreferences] = useState(null);
   const [mixedLyrics, setMixedLyrics] = useState([]);
   const [loadingMessage, setLoadingMessage] = useState('Preparing survey...');
+  const [userIP, setUserIP] = useState(null);
+  const [isWhitelisted, setIsWhitelisted] = useState(false);
 
   useEffect(() => {
-    // Generate session_id on app load and trigger background AI generation
+    // LAYER 1: The Initial Check - Browser First, Database Second
     const initializeApp = async () => {
-      const newSessionId = generateSessionId();
-      setSessionId(newSessionId);
-      
-      console.log('🚀 Webpage loaded! Triggering background AI generation...');
-      
       try {
-        // Trigger background AI generation immediately when page loads
+        // Fetch user's IP address
+        console.log('🔍 Fetching user IP address...');
+        const ip = await getUserIP();
+        setUserIP(ip);
+        console.log(`📍 User IP: ${ip}`);
+
+        // Check vote status from server (includes whitelist check)
+        const voteStatus = await checkVoteStatus(ip);
+        setIsWhitelisted(voteStatus.isWhitelisted);
+
+        if (voteStatus.isWhitelisted) {
+          console.log('✅ Whitelisted IP detected - full access granted');
+          // Continue to generate session and trigger AI
+          const newSessionId = generateSessionId();
+          setSessionId(newSessionId);
+          await triggerBackgroundAI(newSessionId);
+          return;
+        }
+
+        // Priority 1: Check LocalStorage first
+        const hasVotedLocal = localStorage.getItem('hasVoted');
+        
+        if (hasVotedLocal === 'true') {
+          console.log('⚠️  LocalStorage indicates user has voted - verifying with database...');
+          
+          // Verify against database
+          if (voteStatus.hasVoted) {
+            console.log('🚫 Database confirms - user has already voted. Redirecting to conclusion.');
+            setView('conclusion');
+            return;
+          } else {
+            console.log('⚠️  LocalStorage out of sync - clearing flag and allowing access');
+            localStorage.removeItem('hasVoted');
+          }
+        }
+
+        // Priority 2: Database Fallback (e.g., Incognito mode or cleared storage)
+        if (voteStatus.hasVoted) {
+          console.log('🚫 Database check: User has already voted (IP found in session_trackers)');
+          console.log('🔄 Re-syncing localStorage...');
+          localStorage.setItem('hasVoted', 'true');
+          setView('conclusion');
+          return;
+        }
+
+        // Priority 3: Grant Access - Both checks clear
+        console.log('✅ All checks passed - granting access');
+        const newSessionId = generateSessionId();
+        setSessionId(newSessionId);
+        
+        console.log('🚀 Triggering background AI generation...');
         await triggerBackgroundAI(newSessionId);
+
       } catch (error) {
-        console.error('Failed to trigger background AI generation on page load:', error);
+        console.error('Failed to initialize app:', error);
+        // On error, allow user to proceed (fail open for better UX)
+        const newSessionId = generateSessionId();
+        setSessionId(newSessionId);
+        await triggerBackgroundAI(newSessionId);
       }
     };
 
@@ -102,8 +155,30 @@ export default function Home() {
     setView('loading');
   };
 
-  const handleSurveyComplete = () => {
+  const handleSurveyComplete = async () => {
     console.log('✅ Survey completed! Moving to conclusion screen...');
+    
+    // LAYER 2: Lock the door immediately upon survey completion
+    if (userIP && !isWhitelisted) {
+      console.log('🔒 Locking vote for non-whitelisted user...');
+      
+      try {
+        // Lock in database first
+        const lockResult = await lockVote(userIP, sessionId);
+        console.log('✅ Vote locked in database:', lockResult);
+        
+        // Then set localStorage
+        localStorage.setItem('hasVoted', 'true');
+        console.log('✅ LocalStorage flag set');
+      } catch (error) {
+        console.error('⚠️  Failed to lock vote:', error);
+        // Still set localStorage as fallback
+        localStorage.setItem('hasVoted', 'true');
+      }
+    } else if (isWhitelisted) {
+      console.log('⚠️  Whitelisted IP - skipping lock');
+    }
+    
     setView('conclusion');
   };
 
@@ -122,7 +197,7 @@ export default function Home() {
   }
 
   if (view === 'survey') {
-    return <Survey records={mixedLyrics} sessionId={sessionId} onSurveyComplete={handleSurveyComplete} />;
+    return <Survey records={mixedLyrics} sessionId={sessionId} userIP={userIP} onSurveyComplete={handleSurveyComplete} />;
   }
 
   if (view === 'conclusion') {

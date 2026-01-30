@@ -31,7 +31,7 @@ const LOTTIE_MAP = {
     seggae: seggae
 };
 
-const Survey = ({ records, sessionId, onSurveyComplete }) => {
+const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [activeIndex, setActiveIndex] = useState(null);
     const [votes, setVotes] = useState([]);
@@ -109,7 +109,7 @@ const Survey = ({ records, sessionId, onSurveyComplete }) => {
                 const aiVotes = updatedVotes.filter(v => v.isAI).length;
                 console.log(`👤 Human votes: ${humanVotes}, 🤖 AI votes: ${aiVotes}`);
                 
-                await saveVotes(sessionId, updatedVotes);
+                await saveVotes(sessionId, updatedVotes, userIP);
                 console.log('✅ All votes saved successfully!');
                 
                 // Proceed to conclusion screen

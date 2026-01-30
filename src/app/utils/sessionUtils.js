@@ -121,17 +121,19 @@ export const mixLyricsForSession = async (sessionId, age, segaFamiliarity, aiSen
 };
 
 // Save votes to session_votes table
-export const saveVotes = async (sessionId, votes) => {
+export const saveVotes = async (sessionId, votes, ipAddress = null) => {
   try {
     console.log('🗳️  Submitting votes for session:', sessionId);
     console.log('📊 Votes:', votes);
+    console.log('📍 IP Address:', ipAddress || 'not provided');
     
     const response = await fetch('/api/save-votes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         session_id: sessionId,
-        votes: votes
+        votes: votes,
+        ip_address: ipAddress
       })
     });
 

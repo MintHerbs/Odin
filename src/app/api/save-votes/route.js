@@ -8,10 +8,11 @@ const supabase = createClient(
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { session_id, votes } = body;
+    const { session_id, votes, ip_address } = body;
 
     console.log('🗳️  Processing votes for session:', session_id);
     console.log(`📊 Total votes received: ${votes?.length || 0}`);
+    console.log(`📍 IP Address: ${ip_address || 'not provided'}`);
 
     if (!session_id || !votes) {
       return Response.json({ error: 'Missing session_id or votes' }, { status: 400 });
@@ -118,6 +119,29 @@ export async function POST(request) {
       genreCount[row.genre] = (genreCount[row.genre] || 0) + 1;
     });
     console.log(`   - Genre distribution:`, genreCount);
+
+    // LAYER 3: Lock the vote in database (if IP provided and not whitelisted)
+    const WHITELIST_IP = '102.115.222.233';
+    if (ip_address && ip_address !== WHITELIST_IP) {
+      console.log('🔒 Locking vote in database for IP:', ip_address);
+      
+      const { error: lockError } = await supabase
+        .from('session_trackers')
+        .insert({
+          ip_address,
+          session_id,
+          created_at: new Date().toISOString()
+        });
+
+      if (lockError && lockError.code !== '23505') {
+        console.error('⚠️  Failed to lock vote:', lockError);
+        // Don't fail the entire request if lock fails
+      } else {
+        console.log('✅ Vote locked in database');
+      }
+    } else if (ip_address === WHITELIST_IP) {
+      console.log('⚠️  Whitelist IP - skipping database lock');
+    }
 
     return Response.json({ 
       success: true, 
