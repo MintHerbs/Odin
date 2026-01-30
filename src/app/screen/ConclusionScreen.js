@@ -38,8 +38,8 @@ const ConclusionScreen = ({ onComplete }) => {
 
     const getTheme = () => {
         switch (currentSlide) {
-            case 0: return APP_COLORS.mint; 
-            case 1: return APP_COLORS.blue; 
+            case 0: return APP_COLORS.success; 
+            case 1: return APP_COLORS.acknowledgement; 
             default: return APP_COLORS.blue;
         }
     };

@@ -52,6 +52,17 @@ export const APP_COLORS = {
     secondary: '#F7E1E1',
     background: '#FFF5F5',
   },
+
+acknowledgement: {
+    primary: '#E5DBF3',   // Soft Driftwood (readable on white)
+    secondary: '#E5E2E0', // Light Pebble
+    background: '#FAF9F8', // Warm White / Silk
+  },
+  success: {
+    primary: '#82C886', // Soft Primary
+    secondary: '#A9DBAC',
+    background: '#F7FDF8',
+  },
   
   sega: {
     primary: '#8ECAE6',
