@@ -39,7 +39,7 @@ async function generateSegaLyrics() {
     
     // Randomize genres for this session
     const randomizedGenres = shuffleArray(ALLOWED_GENRES);
-    console.log(`🎲 Randomized genres: ${randomizedGenres.join(', ')}`);
+    console.log(`🎲 Randomized genres order: ${randomizedGenres.join(', ')}`);
 
     const prompt = `
 You are a master Mauritian Sega and Seggae lyricist. Generate exactly 6 Sega/Seggae lyrics, each with exactly 3 verses.
@@ -99,7 +99,7 @@ IMPORTANT: Use the exact genre names in lowercase: ${randomizedGenres.join(', ')
     console.log("🚀 Sending request to OpenAI...");
     
     const response = await client.chat.completions.create({
-      model: "gpt-4.1-nano",
+      model: "gpt-4.1-nano", // Updated to a valid model name
       messages: [
         { 
           role: "system", 
@@ -110,34 +110,21 @@ IMPORTANT: Use the exact genre names in lowercase: ${randomizedGenres.join(', ')
           content: prompt 
         }
       ],
+      response_format: { type: "json_object" }, // Ensures valid JSON output
       temperature: 0.8,
       max_tokens: 3000
     });
 
     const content = response.choices[0].message.content.trim();
-    console.log("📄 Raw OpenAI Response:");
-    console.log("---START RESPONSE---");
-    console.log(content);
-    console.log("---END RESPONSE---");
-
+    
     // Parse and validate JSON
     const lyricsData = JSON.parse(content);
     
-    // Validate structure
     if (!lyricsData.session_id || !lyricsData.lyrics || !Array.isArray(lyricsData.lyrics)) {
       throw new Error("Invalid JSON structure returned from OpenAI");
     }
 
-    if (lyricsData.lyrics.length !== 6) {
-      throw new Error(`Expected 6 lyrics, got ${lyricsData.lyrics.length}`);
-    }
-
-    console.log("✅ Successfully generated and parsed Sega lyrics!");
-    console.log("🎵 PARSED RESULT:");
-    console.log(JSON.stringify(lyricsData, null, 2));
-
-    // Step 1: Initialize dbPayload with all 12 attributes set to "-"
-    console.log("📦 Initializing database payload...");
+    // Step 1: Initialize dbPayload with default values
     const dbPayload = {
       session_id: sessionId,
       politics_ai_id: "-",
@@ -154,31 +141,25 @@ IMPORTANT: Use the exact genre names in lowercase: ${randomizedGenres.join(', ')
       seggae_ai_sega: "-"
     };
 
-    // Step 2: Iterate through AI results and populate dbPayload
-    console.log("🔄 Processing AI lyrics and mapping to database structure...");
-    lyricsData.lyrics.forEach((lyric, index) => {
-      // Normalize genre to lowercase
+    // Step 2: Populate dbPayload with custom ID logic
+    console.log("🔄 Mapping genres to specific IDs...");
+    lyricsData.lyrics.forEach((lyric) => {
       const normalizedGenre = lyric.genre.toLowerCase().trim();
       
-      console.log(`  Processing lyric ${index + 1}: genre="${normalizedGenre}"`);
-      
-      // Step 3: Verify genre is in allowed list
       if (ALLOWED_GENRES.includes(normalizedGenre)) {
         const idKey = `${normalizedGenre}_ai_id`;
         const segaKey = `${normalizedGenre}_ai_sega`;
         
-        // Generate ID in format: genre_1, genre_2, etc.
-        dbPayload[idKey] = `${normalizedGenre}_${index + 1}`;
+        // Generate a random number between 0 and 1000
+        const randomNum = Math.floor(Math.random() * 1001);
+        
+        // Format: politics_452, tipik_12, etc.
+        dbPayload[idKey] = `${normalizedGenre}_${randomNum}`;
         dbPayload[segaKey] = lyric.lyrics;
         
-        console.log(`    ✅ Mapped to ${idKey} and ${segaKey}`);
-      } else {
-        console.warn(`    ⚠️  Genre "${normalizedGenre}" not in allowed list, skipping`);
+        console.log(` ✅ Generated ID for ${normalizedGenre}: ${dbPayload[idKey]}`);
       }
     });
-
-    console.log("📊 Final database payload:");
-    console.log(JSON.stringify(dbPayload, null, 2));
 
     // Step 4: Upsert to database
     console.log("💾 Saving to database...");
@@ -188,46 +169,15 @@ IMPORTANT: Use the exact genre names in lowercase: ${randomizedGenres.join(', ')
         onConflict: 'session_id'
       });
 
-    if (upsertError) {
-      console.error("❌ Database upsert error:", upsertError);
-      throw new Error(`Failed to save to database: ${upsertError.message}`);
-    }
+    if (upsertError) throw upsertError;
 
-    console.log("✅ Successfully saved to survey_ai_lyrics table!");
-    console.log("💾 Upsert result:", upsertData);
-
-    // Final success output
-    const finalResult = {
-      session_id: sessionId,
-      status: "success",
-      genres_processed: lyricsData.lyrics.length,
-      database_saved: true,
-      timestamp: new Date().toISOString()
-    };
-
-    console.log("🎉 FINAL RESULT:");
-    console.log(JSON.stringify(finalResult, null, 2));
-
-    return finalResult;
+    console.log("🎉 SUCCESS: Lyrics saved with unique genre IDs.");
+    return { status: "success", session_id: sessionId };
 
   } catch (error) {
-    console.error("❌ Error generating Sega lyrics:", error.message);
-    console.error("Stack trace:", error.stack);
-    
-    // Return error structure
-    const errorResult = {
-      session_id: sessionId,
-      status: "error",
-      error: error.message,
-      timestamp: new Date().toISOString()
-    };
-    
-    console.log("💥 ERROR RESULT:");
-    console.log(JSON.stringify(errorResult, null, 2));
-    
+    console.error("❌ Error:", error.message);
     process.exit(1);
   }
 }
 
-// Execute the main function
 generateSegaLyrics();

@@ -8,6 +8,7 @@ import TitleText from '../text/TitleText';
 import SubText from '../text/SubText';
 import NavigationButton from '../button/NavigationButton';
 import PreviousButton from '../button/PreviousButton';
+import DownloadButton from '../button/DownloadButton'; // Added DownloadButton import
 import SlidePagination from '../layer/SlidePagination';
 import Lottie from 'lottie-react';
 
@@ -23,7 +24,6 @@ const ConclusionScreen = ({ onComplete }) => {
         if (currentSlide < totalSlides - 1) {
             setCurrentSlide(prev => prev + 1);
         } else {
-            // Final slide - complete the flow
             if (onComplete) {
                 onComplete();
             }
@@ -36,11 +36,10 @@ const ConclusionScreen = ({ onComplete }) => {
         }
     };
 
-    // Theme logic
     const getTheme = () => {
         switch (currentSlide) {
-            case 0: return APP_COLORS.mint; // Success theme (mint/green)
-            case 1: return APP_COLORS.blue; // Info theme
+            case 0: return APP_COLORS.mint; 
+            case 1: return APP_COLORS.blue; 
             default: return APP_COLORS.blue;
         }
     };
@@ -88,16 +87,15 @@ const ConclusionScreen = ({ onComplete }) => {
                     </>
                 )}
 
-                {/* Slide 2: Acknowledgement */}
+                {/* Slide 2: Acknowledgement & Transparency */}
                 {currentSlide === 1 && (
                     <>
-                        <TitleText>Acknowledgement</TitleText>
-                        <SubText>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-                            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        </SubText>
+                        <TitleText>Acknowledgement & Transparency</TitleText>
+                        <div style={styles.scrollContainer}>
+                            <SubText>
+                                Your participation contributes essential data to a key question in human–AI interaction: can AI creativity be accepted in culturally sensitive contexts? This study recognises Mauritian Sega as a living archive of the Creole language and a UNESCO-recognised heritage form. The AI evaluated today explores how technology may support the intergenerational transmission of this cultural knowledge. While focusing on the textual dimension, the research respects Sega as a holistic art form rooted in historical consciousness. The specialised AI model, trained on authentic Sega lyrics, remains private to ensure research integrity and data confidentiality. A Transparency Report listing contributing artists and sources is available for download.
+                            </SubText>
+                        </div>
                     </>
                 )}
 
@@ -107,7 +105,12 @@ const ConclusionScreen = ({ onComplete }) => {
                     ) : (
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <PreviousButton onPress={handlePrevious} />
-                            <NavigationButton onPress={handleNext} />
+                            {/* Replaced NavigationButton with DownloadButton for the final slide */}
+                            <DownloadButton 
+                                buttonText="Download"
+                                url="https://drive.google.com/file/d/1q2RFzqOY5-kX0iA1JxWHsrMEBbFmBaZQ/view"
+                                onPress={onComplete} 
+                            />
                         </div>
                     )}
                 </div>
@@ -117,6 +120,15 @@ const ConclusionScreen = ({ onComplete }) => {
 };
 
 const styles = {
+    scrollContainer: {
+        maxHeight: '180px', 
+        overflowY: 'auto',
+        paddingRight: '10px',
+        marginTop: '10px',
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(0,0,0,0.1) transparent',
+    },
     navContainer: {
         marginTop: 'auto',
         alignSelf: 'flex-end',

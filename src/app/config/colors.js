@@ -1,34 +1,47 @@
 export const APP_COLORS = {
+  // Romance Lottie (#DC5F8F)
   pink: {
-    primary: '#E987A0',
-    secondary: '#FFCAD8',
-    background: '#FFEBEF',
+    primary: '#E5A1BA',   // Pastel Rose
+    secondary: '#F5D6E0', // Soft Petal
+    background: '#FAF0F4', // Whisper Pink
   },
+  
+  // Celebration Lottie (#C93723) - Mapped to 'purple' block per request
   purple: {
-    primary: '#BB86FA',
-    secondary: '#F2E7FF',
-    background: '#F2E7FF',
+    primary: '#E6A39A',   // Pastel Coral (Matches Celebration Red)
+    secondary: '#F4D5D1', // Soft Salmon
+    background: '#FAF0EF', // Shell Pink
   },
+  
+  // Politics Lottie (#5A8597)
   blue: {
-    primary: '#5A71D9',
-    secondary: '#D9E5FF',
-    background: '#E6EAF9',
+    primary: '#93B3C0',   // Muted Sky
+    secondary: '#D1DEE4', // Dust Blue
+    background: '#EBF0F2', // Cloud
   },
+  
+  // Tipik Lottie (#EE8936)
   yellow: {
-    primary: '#EED078',
-    secondary: '#FCF7E8',
-    background: '#FDFAEF',
+    primary: '#F5C49A',   // Soft Apricot
+    secondary: '#FDE9D8', // Cream Orange
+    background: '#FEF6EF', // Linen
   },
+  
+  // Engager Lottie (Muted Grays/Clouds)
   gray: {
-    questionnaire: '#2D353C',
-    textBox: '#383F46',
-    background: '#EAEDF0',
+    questionnaire: '#9BA9B4', // Soft Slate
+    textBox: '#C7D0D7',       // Pastel Gray
+    background: '#F1F4F6',    // Ice
   },
-  mint: { // Replaced Orange for 'Seggae'
-    primary: '#A8DADC', 
-    secondary: '#F1FAEE',
-    background: '#F9FFF9',
+  
+  // Seggae Lottie (#9FCEDC)
+  mint: { 
+    primary: '#B1D9E4',   // Pastel Aqua
+    secondary: '#E2F1F5', // Soft Mint
+    background: '#F2FAFC', // Dew
   },
+
+  // These remain unchanged as per your instructions
   black: {
     questionnaire: '#2D353C',
     textBox: '#383F46',
@@ -39,6 +52,7 @@ export const APP_COLORS = {
     secondary: '#F7E1E1',
     background: '#FFF5F5',
   },
+  
   sega: {
     primary: '#8ECAE6',
     secondary: '#E2F2F5',
