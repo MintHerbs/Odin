@@ -6,6 +6,25 @@ const supabase = createClient(
 );
 
 /**
+ * Map genre to color code
+ * @param {string} genre - Genre name
+ * @returns {string} Color code from APP_COLORS
+ */
+const getColorCodeForGenre = (genre) => {
+  const genreLower = genre?.toLowerCase() || '';
+  
+  if (genreLower.includes('romance')) return 'pink';
+  if (genreLower.includes('politics')) return 'blue';
+  if (genreLower.includes('celebration')) return 'purple';
+  if (genreLower.includes('tipik')) return 'yellow';
+  if (genreLower.includes('engager')) return 'gray';
+  if (genreLower.includes('seggae')) return 'mint';
+  
+  // Default fallback
+  return 'blue';
+};
+
+/**
  * Select 5 human lyrics from survey_data based on user preferences
  * @param {Object} userPreferences - User input from ModerationFlow
  * @param {number} userPreferences.age - User's age
@@ -101,7 +120,8 @@ export const selectHumanLyrics = async (userPreferences) => {
         ...lyric,
         is_ai: false, // Mark as human-generated
         source: 'human',
-        lottie: lyric.lottie || lyric.genre?.toLowerCase() // Add lottie field for genre mapping
+        lottie: lyric.lottie || lyric.genre?.toLowerCase(), // Add lottie field for genre mapping
+        color_code: getColorCodeForGenre(lyric.genre) // Map genre to color
       }));
 
     // Extract the SIDs for storage
@@ -163,14 +183,16 @@ export const fetchAILyrics = async (sessionId) => {
       const segaField = `${genre}_ai_sega`;
 
       if (data[idField] && data[segaField] && data[segaField] !== '-') {
+        const genreName = genre.charAt(0).toUpperCase() + genre.slice(1);
         allAILyrics.push({
           sid: data[idField],
-          genre: genre.charAt(0).toUpperCase() + genre.slice(1),
+          genre: genreName,
           lyrics: data[segaField],
           is_ai: true,
           source: 'ai',
           session_id: sessionId,
-          lottie: genre // Add lottie field for genre mapping
+          lottie: genre, // Add lottie field for genre mapping
+          color_code: getColorCodeForGenre(genreName) // Map genre to color
         });
       }
     });
