@@ -13,9 +13,10 @@ export default function Home() {
   const [sessionId, setSessionId] = useState(null);
   const [userPreferences, setUserPreferences] = useState(null);
   const [mixedLyrics, setMixedLyrics] = useState([]);
-  const [loadingMessage, setLoadingMessage] = useState('Preparing survey...');
+  const [loadingMessage, setLoadingMessage] = useState('Odin AI greets you!');
   const [userIP, setUserIP] = useState(null);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState(0);
 
   useEffect(() => {
     // LAYER 1: The Initial Check - Browser First, Database Second
@@ -95,16 +96,25 @@ export default function Home() {
   const fetchDataAndMixLyrics = async () => {
     try {
       console.log('🔄 Loading survey data and checking AI lyrics status...');
-      setLoadingMessage('Checking AI lyrics generation...');
+      
+      // Rotating messages for loading phases
+      const rotatingMessages = [
+        'Generating lyrics...',
+        'Phonetic Mapping...',
+        'Generating lyrics...'
+      ];
       
       // Step 1: Check if AI lyrics are ready
       const aiStatus = await checkAILyricsReady(sessionId);
       
       if (!aiStatus.ready) {
         console.log(`⏳ AI lyrics not ready yet. Status: ${aiStatus.status}`);
-        console.log(`📊 Progress: ${aiStatus.genres_populated || 0}/${aiStatus.total_genres || 6} genres`);
+        console.log(`📊 Progress: ${aiStatus.genres_populated || 0}/${aiStatus.total_genres || 5} genres`);
         
-        setLoadingMessage(`Generating AI lyrics... (${aiStatus.genres_populated || 0}/5 genres)`);
+        // Cycle through rotating messages
+        const messageIndex = loadingPhase % rotatingMessages.length;
+        setLoadingMessage(rotatingMessages[messageIndex]);
+        setLoadingPhase(prev => prev + 1);
         
         // Poll again after 3 seconds
         setTimeout(() => {
@@ -114,11 +124,11 @@ export default function Home() {
       }
 
       console.log('✅ AI lyrics are ready! Proceeding with mixing...');
-      setLoadingMessage('AI lyrics ready! Mixing with human lyrics...');
+      setLoadingMessage('Mixing Lyrics...');
 
       // Step 2: Mix lyrics based on user preferences
       console.log('🎭 Mixing lyrics with user preferences:', userPreferences);
-      setLoadingMessage('Mixing lyrics...');
+      setLoadingMessage('Mixing Lyrics...');
       
       const mixResult = await mixLyricsForSession(
         sessionId,
@@ -130,22 +140,22 @@ export default function Home() {
       if (mixResult.success) {
         setMixedLyrics(mixResult.lyrics);
         console.log('✅ Mixed lyrics loaded:', mixResult.metadata);
-        setLoadingMessage('Almost ready...');
+        setLoadingMessage('Done, Good luck!');
       } else {
         throw new Error('Failed to mix lyrics');
       }
 
-      // Give it a small delay so the loader feels intentional
+      // Give it a small delay so the final message is visible
       setTimeout(() => {
         setView('survey');
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error('Error fetching data or mixing lyrics:', error);
-      setLoadingMessage('Error occurred, proceeding anyway...');
+      setLoadingMessage('Done, Good luck!');
       // Fallback: proceed to survey even with error after delay
       setTimeout(() => {
         setView('survey');
-      }, 2000);
+      }, 1500);
     }
   };
 

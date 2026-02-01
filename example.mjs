@@ -50,7 +50,7 @@ Generate exactly 5 original Sega/Seggae lyrics in Mauritian Creole using your sp
 GENRE SEQUENCE: ${selectedGenres.join(', ')}
 
 STRUCTURE & FLOW:
-- Each song MUST have exactly 3 stanzas (separated by \\n\\n).
+- Each song MUST have exactly 4 stanzas (separated by \\n\\n).
 - Avoid short, clipped lines. Aim for a natural "rhythme trainé" where each stanza has 4-6 descriptive lines.
 - Develop a narrative or a specific "tableau" (scene) for each verse to ensure the lyrics feel substantial and human-written.
 - Use authentic local phrasing that captures the "tripo" of the island.
