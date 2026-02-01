@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
-import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { join } from 'path';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -58,8 +58,8 @@ export async function POST(request) {
 
     console.log(`🚀 Triggering background AI generation for session: ${session_id}`);
 
-    // Get the absolute path to example.mjs
-    const scriptPath = path.join(process.cwd(), 'example.mjs');
+    // Get the absolute path to example.mjs in the project root
+    const scriptPath = join(process.cwd(), 'example.mjs');
     
     console.log(`📂 Script path: ${scriptPath}`);
     console.log(`🔧 Spawning background process...`);

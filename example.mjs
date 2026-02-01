@@ -1,131 +1,106 @@
 import OpenAI from "openai";
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-// Get session_id from command line arguments
+/* CLI */
 const sessionId = process.argv[2];
-
 if (!sessionId) {
-  console.error("❌ Error: session_id is required as first argument");
+  console.error("session_id required");
   process.exit(1);
 }
 
-// Initialize OpenAI client with the specific Munazir Organization ID
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, 
-  organization: "org-TNbp13HHLuhYEKqloGkvVfg6" // Added to match your successful Python test
+/* Clients */
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: "org-TNbp13HHLuhYEKqloGkvVfg6"
 });
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
-// All 8 allowed genres
-const ALLOWED_GENRES = ["politics", "engager", "romance", "celebration", "tipik", "seggae", "hotel", "modern"];
+/* Config */
+const MODEL_ID =
+  "ft:gpt-4o-mini-2024-07-18:munazir:sega-llm-primary-odin:D4BxIHVt";
 
-// Shuffle array function
-function shuffleArray(array) {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+const GENRES = [
+  "politics",
+  "engager",
+  "romance",
+  "celebration",
+  "tipik",
+  "seggae",
+  "hotel",
+  "modern"
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return shuffled;
+  return a;
 }
 
-async function generateSegaLyrics() {
-  try {
-    console.log(`🎵 Starting specialized Sega generation for session: ${sessionId}`);
-    
-    // Randomize genres and select only 5
-    const randomizedGenres = shuffleArray(ALLOWED_GENRES);
-    const selectedGenres = randomizedGenres.slice(0, 5); 
-    
-    console.log(`🎲 Selected genres: ${selectedGenres.join(', ')}`);
+/* Generation */
+async function generateLyrics(genre) {
+  const prompt = `
+Generate a full Mauritian Sega song in the genre "${genre}".
 
-    const prompt = `
-Generate exactly 5 original Sega/Seggae lyrics in Mauritian Creole using your specialized training.
+FORMAT RULES:
+- Do NOT include a title
+- Do NOT label sections like verse or chorus
+- Do NOT use french words unless it helps develop the theme
+- Each stanza should have around 3 to 4 lines
+- Each line should be at least 5 words long
+- No markdown, no asterisks
+- Write lyrics only with natural stanza breaks
 
-GENRE SEQUENCE: ${selectedGenres.join(', ')}
-
-STRUCTURE & FLOW:
-- Each song MUST have exactly 4 stanzas (separated by \\n\\n).
-- Avoid short, clipped lines. Aim for a natural "rhythme trainé" where each stanza has 4-6 descriptive lines.
-- Develop a narrative or a specific "tableau" (scene) for each verse to ensure the lyrics feel substantial and human-written.
-- Use authentic local phrasing that captures the "tripo" of the island.
-- DO NOT use French-specific words or phrases unless it is necessary for the artistic development of the lyrics.
-- DO NOT use circumflex accents (e.g., use "lafet" instead of "lafête", "lapes" instead of "lapêche").
-
-Return ONLY a valid JSON object in this exact format:
-{
-  "session_id": "${sessionId}",
-  "lyrics": [
-    { "genre": "${selectedGenres[0]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
-    { "genre": "${selectedGenres[1]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
-    { "genre": "${selectedGenres[2]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
-    { "genre": "${selectedGenres[3]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
-    { "genre": "${selectedGenres[4]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" }
-  ]
-}
-
-IMPORTANT: Return valid JSON only. Use lowercase genre names. No preamble.
+STYLE:
+- Sega rhythm
+- Emotional and descriptive
+- No explanations
 `;
 
-    console.log("🚀 Calling fine-tuned model...");
-    
-    const response = await client.chat.completions.create({
-      model: "ft:gpt-4o-mini-2024-07-18:munazir:sega-llm-primary-odin:D4BxIHVt",
-      messages: [
-        { 
-          role: "system", 
-          content: "You are a master Mauritian Sega lyricist specialized in authentic storytelling. You only output valid JSON." 
-        },
-        { 
-          role: "user", 
-          content: prompt 
-        }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.75,
-      max_tokens: 3500
-    });
+  const response = await openai.responses.create({
+    model: MODEL_ID,
+    input: prompt,
+    temperature: 0.85,
+    max_output_tokens: 1200
+  });
 
-    const content = response.choices[0].message.content.trim();
-    const lyricsData = JSON.parse(content);
-    
-    if (!lyricsData.lyrics || !Array.isArray(lyricsData.lyrics)) {
-      throw new Error("Invalid JSON structure returned from model");
-    }
+  return response.output_text.trim();
+}
 
-    // Prepare rows for Supabase
-    const normalizedRows = lyricsData.lyrics.slice(0, 5).map((lyric) => {
-      const normalizedGenre = lyric.genre.toLowerCase().trim();
-      const randomNum = Math.floor(Math.random() * 1001);
-      const aiId = `${normalizedGenre}_${randomNum}`;
-      
-      return {
+/* Main */
+async function run() {
+  try {
+    const selectedGenres = shuffle(GENRES).slice(0, 5);
+    console.log("Generating:", selectedGenres.join(", "));
+
+    const rows = await Promise.all(
+      selectedGenres.map(async (genre) => ({
         session_id: sessionId,
-        genre: normalizedGenre,
-        ai_id: aiId,
-        lyrics: lyric.lyrics
-      };
-    });
+        genre,
+        ai_id: `${genre}_${Math.floor(Math.random() * 100000)}`,
+        lyrics: await generateLyrics(genre)
+      }))
+    );
 
-    console.log("💾 Inserting into session_ai_lyrics...");
-    const { data: insertData, error: insertError } = await supabase
-      .from('session_ai_lyrics')
-      .insert(normalizedRows);
+    const { error } = await supabase
+      .from("session_ai_lyrics")
+      .insert(rows);
 
-    if (insertError) throw insertError;
+    if (error) throw error;
 
-    console.log(`🎉 SUCCESS: 5 lyrics saved for session: ${sessionId}`);
-    return { status: "success", count: normalizedRows.length };
+    console.log("Done. Stored", rows.length, "lyrics");
+    process.exit(0);
 
-  } catch (error) {
-    console.error("❌ Error in generation process:", error.message);
+  } catch (err) {
+    console.error(err.message);
     process.exit(1);
   }
 }
 
-generateSegaLyrics();
+run();

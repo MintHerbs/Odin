@@ -1,15 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// NOTE: This route is legacy code and not currently used
+// The system now uses example.mjs with OpenAI instead of Gemini
+// import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Generate AI lyrics for all genres
 const generateAllLyrics = async (sessionId) => {
+  // NOTE: This function is legacy code - system now uses example.mjs with OpenAI
+  throw new Error('This route is deprecated. Use /api/trigger-gen instead.');
+  
+  /* Legacy Gemini code commented out
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const prompt = `
@@ -67,6 +73,7 @@ Only return the JSON object, no additional text.
     console.error('Error generating AI lyrics:', error);
     throw new Error(`Failed to generate AI lyrics: ${error.message}`);
   }
+  */
 };
 
 export async function POST(request) {
