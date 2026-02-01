@@ -104,7 +104,7 @@ export default function Home() {
         console.log(`⏳ AI lyrics not ready yet. Status: ${aiStatus.status}`);
         console.log(`📊 Progress: ${aiStatus.genres_populated || 0}/${aiStatus.total_genres || 6} genres`);
         
-        setLoadingMessage(`Generating AI lyrics... (${aiStatus.genres_populated || 0}/6 genres)`);
+        setLoadingMessage(`Generating AI lyrics... (${aiStatus.genres_populated || 0}/5 genres)`);
         
         // Poll again after 3 seconds
         setTimeout(() => {

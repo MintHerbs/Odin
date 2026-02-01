@@ -41,6 +41,30 @@ export const APP_COLORS = {
     background: '#F2FAFC', // Dew
   },
 
+   red: {
+
+    primary: '#F2D2BD',   // Nude / Sandy Beige
+
+    secondary: '#F9E5D9', // Soft Peach
+
+    background: '#FAF5F2', // Silk White
+
+  },
+
+  
+
+  // Modern Genre (Mapped to Red Lottie, but using Rose/Taupe Pastel)
+
+  green: {
+
+    primary: '#E8D7D0',   // Soft Dusty Rose / Taupe
+
+    secondary: '#F2E8E4', // Pale Blush
+
+    background: '#F9F5F4', // Mist
+
+  },
+
   // These remain unchanged as per your instructions
   black: {
     questionnaire: '#2D353C',

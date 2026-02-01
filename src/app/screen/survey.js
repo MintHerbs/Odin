@@ -21,6 +21,8 @@ import tipik from '../lottie/tipik.json';
 import romance from '../lottie/romance.json';
 import sega from '../lottie/sega.json';
 import seggae from '../lottie/seggae.json';
+import hotel from '../lottie/hotel.json';
+import modern from '../lottie/modern.json';
 import opinionAnimation from '../lottie/opinion.json';
 
 const LOTTIE_MAP = {
@@ -30,6 +32,8 @@ const LOTTIE_MAP = {
     tipik,
     romance,
     seggae: seggae,
+    hotel,
+    modern,
     opinion: opinionAnimation
 };
 

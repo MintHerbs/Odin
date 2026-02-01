@@ -9,9 +9,10 @@ if (!sessionId) {
   process.exit(1);
 }
 
-// Initialize OpenAI client
+// Initialize OpenAI client with the specific Munazir Organization ID
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, 
+  organization: "org-TNbp13HHLuhYEKqloGkvVfg6" // Added to match your successful Python test
 });
 
 // Initialize Supabase client
@@ -20,8 +21,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
-// All 6 allowed genres
-const ALLOWED_GENRES = ["politics", "engager", "romance", "celebration", "tipik", "seggae"];
+// All 8 allowed genres
+const ALLOWED_GENRES = ["politics", "engager", "romance", "celebration", "tipik", "seggae", "hotel", "modern"];
 
 // Shuffle array function
 function shuffleArray(array) {
@@ -35,147 +36,92 @@ function shuffleArray(array) {
 
 async function generateSegaLyrics() {
   try {
-    console.log(`🎵 Starting Sega lyrics generation for session: ${sessionId}`);
+    console.log(`🎵 Starting specialized Sega generation for session: ${sessionId}`);
     
-    // Randomize genres for this session
+    // Randomize genres and select only 5
     const randomizedGenres = shuffleArray(ALLOWED_GENRES);
-    console.log(`🎲 Randomized genres order: ${randomizedGenres.join(', ')}`);
+    const selectedGenres = randomizedGenres.slice(0, 5); 
+    
+    console.log(`🎲 Selected genres: ${selectedGenres.join(', ')}`);
 
     const prompt = `
-You are a master Mauritian Sega and Seggae lyricist. Generate exactly 6 Sega/Seggae lyrics, each with exactly 3 verses.
+Generate exactly 5 original Sega/Seggae lyrics in Mauritian Creole using your specialized training.
 
-Use these genres in this exact order: ${randomizedGenres.join(', ')}
+GENRE SEQUENCE: ${selectedGenres.join(', ')}
 
-Requirements:
-- Each lyric must have exactly 3 verses
-- Each verse should be 4-6 lines long
-- Use authentic Mauritian Creole words and expressions where appropriate
-- Capture the rhythm and soul of traditional Sega music
-- Make them culturally authentic and meaningful
-- Separate verses with double newlines (\\n\\n)
-
-Genre descriptions:
-- Politics: Social issues, governance, community concerns in Mauritius
-- Engager: Modern social engagement, contemporary issues, activism
-- Tipik: Traditional authentic Mauritian Sega with cultural elements
-- Romance: Love, relationships, heartbreak in Mauritian context
-- Celebration: Festive songs for parties, joy, community gatherings
-- Seggae: Fusion of Sega and Reggae, with social consciousness themes
+STRUCTURE & FLOW:
+- Each song MUST have exactly 3 stanzas (separated by \\n\\n).
+- Avoid short, clipped lines. Aim for a natural "rhythme trainé" where each stanza has 4-6 descriptive lines.
+- Develop a narrative or a specific "tableau" (scene) for each verse to ensure the lyrics feel substantial and human-written.
+- Use authentic local phrasing that captures the "tripo" of the island.
 
 Return ONLY a valid JSON object in this exact format:
 {
   "session_id": "${sessionId}",
   "lyrics": [
-    {
-      "genre": "${randomizedGenres[0]}",
-      "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3"
-    },
-    {
-      "genre": "${randomizedGenres[1]}", 
-      "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3"
-    },
-    {
-      "genre": "${randomizedGenres[2]}",
-      "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3"
-    },
-    {
-      "genre": "${randomizedGenres[3]}",
-      "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3"
-    },
-    {
-      "genre": "${randomizedGenres[4]}",
-      "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3"
-    },
-    {
-      "genre": "${randomizedGenres[5]}",
-      "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3"
-    }
+    { "genre": "${selectedGenres[0]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
+    { "genre": "${selectedGenres[1]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
+    { "genre": "${selectedGenres[2]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
+    { "genre": "${selectedGenres[3]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" },
+    { "genre": "${selectedGenres[4]}", "lyrics": "verse 1\\n\\nverse 2\\n\\nverse 3" }
   ]
 }
 
-IMPORTANT: Use the exact genre names in lowercase: ${randomizedGenres.join(', ')}
+IMPORTANT: Return valid JSON only. Use lowercase genre names. No preamble.
 `;
 
-    console.log("🚀 Sending request to OpenAI...");
+    console.log("🚀 Calling fine-tuned model...");
     
     const response = await client.chat.completions.create({
-      model: "gpt-4.1-nano", // Updated to a valid model name
+      model: "ft:gpt-4o-mini-2024-07-18:munazir:sega-llm-primary-odin:D4BxIHVt",
       messages: [
         { 
           role: "system", 
-          content: "You are a master Mauritian Sega lyricist. Always respond with valid JSON only." 
+          content: "You are a master Mauritian Sega lyricist specialized in authentic storytelling. You only output valid JSON." 
         },
         { 
           role: "user", 
           content: prompt 
         }
       ],
-      response_format: { type: "json_object" }, // Ensures valid JSON output
-      temperature: 0.8,
-      max_tokens: 3000
+      response_format: { type: "json_object" },
+      temperature: 0.75,
+      max_tokens: 3500
     });
 
     const content = response.choices[0].message.content.trim();
-    
-    // Parse and validate JSON
     const lyricsData = JSON.parse(content);
     
-    if (!lyricsData.session_id || !lyricsData.lyrics || !Array.isArray(lyricsData.lyrics)) {
-      throw new Error("Invalid JSON structure returned from OpenAI");
+    if (!lyricsData.lyrics || !Array.isArray(lyricsData.lyrics)) {
+      throw new Error("Invalid JSON structure returned from model");
     }
 
-    // Step 1: Initialize dbPayload with default values
-    const dbPayload = {
-      session_id: sessionId,
-      politics_ai_id: "-",
-      politics_ai_sega: "-",
-      engager_ai_id: "-",
-      engager_ai_sega: "-",
-      romance_ai_id: "-",
-      romance_ai_sega: "-",
-      celebration_ai_id: "-",
-      celebration_ai_sega: "-",
-      tipik_ai_id: "-",
-      tipik_ai_sega: "-",
-      seggae_ai_id: "-",
-      seggae_ai_sega: "-"
-    };
-
-    // Step 2: Populate dbPayload with custom ID logic
-    console.log("🔄 Mapping genres to specific IDs...");
-    lyricsData.lyrics.forEach((lyric) => {
+    // Prepare rows for Supabase
+    const normalizedRows = lyricsData.lyrics.slice(0, 5).map((lyric) => {
       const normalizedGenre = lyric.genre.toLowerCase().trim();
+      const randomNum = Math.floor(Math.random() * 1001);
+      const aiId = `${normalizedGenre}_${randomNum}`;
       
-      if (ALLOWED_GENRES.includes(normalizedGenre)) {
-        const idKey = `${normalizedGenre}_ai_id`;
-        const segaKey = `${normalizedGenre}_ai_sega`;
-        
-        // Generate a random number between 0 and 1000
-        const randomNum = Math.floor(Math.random() * 1001);
-        
-        // Format: politics_452, tipik_12, etc.
-        dbPayload[idKey] = `${normalizedGenre}_${randomNum}`;
-        dbPayload[segaKey] = lyric.lyrics;
-        
-        console.log(` ✅ Generated ID for ${normalizedGenre}: ${dbPayload[idKey]}`);
-      }
+      return {
+        session_id: sessionId,
+        genre: normalizedGenre,
+        ai_id: aiId,
+        lyrics: lyric.lyrics
+      };
     });
 
-    // Step 4: Upsert to database
-    console.log("💾 Saving to database...");
-    const { data: upsertData, error: upsertError } = await supabase
-      .from('survey_ai_lyrics')
-      .upsert(dbPayload, {
-        onConflict: 'session_id'
-      });
+    console.log("💾 Inserting into session_ai_lyrics...");
+    const { data: insertData, error: insertError } = await supabase
+      .from('session_ai_lyrics')
+      .insert(normalizedRows);
 
-    if (upsertError) throw upsertError;
+    if (insertError) throw insertError;
 
-    console.log("🎉 SUCCESS: Lyrics saved with unique genre IDs.");
-    return { status: "success", session_id: sessionId };
+    console.log(`🎉 SUCCESS: 5 lyrics saved for session: ${sessionId}`);
+    return { status: "success", count: normalizedRows.length };
 
   } catch (error) {
-    console.error("❌ Error:", error.message);
+    console.error("❌ Error in generation process:", error.message);
     process.exit(1);
   }
 }

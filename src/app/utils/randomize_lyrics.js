@@ -19,6 +19,8 @@ const getColorCodeForGenre = (genre) => {
   if (genreLower.includes('tipik')) return 'yellow';
   if (genreLower.includes('engager')) return 'gray';
   if (genreLower.includes('seggae')) return 'mint';
+  if (genreLower.includes('hotel')) return 'red';
+  if (genreLower.includes('modern')) return 'green';
   
   // Default fallback
   return 'blue';
@@ -85,7 +87,8 @@ export const selectHumanLyrics = async (userPreferences) => {
       } else if (segaFamiliarity <= 2) {
         // Prefer modern/popular genres
         if (lyric.genre && (lyric.genre.toLowerCase().includes('engager') || 
-                            lyric.genre.toLowerCase().includes('celebration'))) {
+                            lyric.genre.toLowerCase().includes('celebration') ||
+                            lyric.genre.toLowerCase().includes('modern'))) {
           score += 15;
         }
       }
@@ -93,13 +96,37 @@ export const selectHumanLyrics = async (userPreferences) => {
       // AI sentiment influence on genre selection
       if (aiSentiment >= 4) {
         // Pro-AI users might appreciate more experimental genres
-        if (lyric.genre && lyric.genre.toLowerCase().includes('engager')) {
+        if (lyric.genre && (lyric.genre.toLowerCase().includes('engager') ||
+                            lyric.genre.toLowerCase().includes('modern'))) {
           score += 10;
         }
       } else if (aiSentiment <= 2) {
         // Anti-AI users might prefer traditional authentic content
         if (lyric.genre && lyric.genre.toLowerCase().includes('tipik')) {
           score += 10;
+        }
+      }
+
+      // Age-based genre preferences
+      if (age) {
+        // Young participants (18-30) prefer modern genres
+        if (age >= 18 && age <= 30) {
+          if (lyric.genre && (lyric.genre.toLowerCase().includes('modern') ||
+                              lyric.genre.toLowerCase().includes('engager'))) {
+            score += 12;
+          }
+        }
+        // Middle-aged participants (40-60) prefer hotel/tourism themes
+        else if (age >= 40 && age <= 60) {
+          if (lyric.genre && lyric.genre.toLowerCase().includes('hotel')) {
+            score += 12;
+          }
+        }
+        // Older participants (60+) prefer traditional
+        else if (age > 60) {
+          if (lyric.genre && lyric.genre.toLowerCase().includes('tipik')) {
+            score += 12;
+          }
         }
       }
 
@@ -147,7 +174,7 @@ export const selectHumanLyrics = async (userPreferences) => {
 
 /**
  * Fetch AI-generated lyrics for a specific session
- * STRICT: Returns exactly 5 AI lyrics (excludes 1 random genre)
+ * Returns exactly 5 AI lyrics (one random genre is excluded during generation)
  * @param {string} sessionId - The session ID
  * @returns {Promise<Array>} Array of exactly 5 AI lyric objects
  */
@@ -156,67 +183,45 @@ export const fetchAILyrics = async (sessionId) => {
     console.log('🤖 Fetching AI lyrics for session:', sessionId);
 
     const { data, error } = await supabase
-      .from('survey_ai_lyrics')
+      .from('session_ai_lyrics')
       .select('*')
-      .eq('session_id', sessionId)
-      .single();
+      .eq('session_id', sessionId);
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        console.warn('⚠️  No AI lyrics found for this session');
-        return [];
-      }
+      console.error('Error fetching AI lyrics:', error);
       throw new Error(`Failed to fetch AI lyrics: ${error.message}`);
     }
 
-    if (!data) {
-      console.warn('⚠️  AI lyrics data is empty');
+    if (!data || data.length === 0) {
+      console.warn('⚠️  No AI lyrics found for this session');
       return [];
     }
 
-    // Transform the flat structure into an array of lyric objects
-    const allAILyrics = [];
-    const genres = ['politics', 'engager', 'romance', 'celebration', 'tipik', 'seggae'];
-
-    genres.forEach((genre) => {
-      const idField = `${genre}_ai_id`;
-      const segaField = `${genre}_ai_sega`;
-
-      if (data[idField] && data[segaField] && data[segaField] !== '-') {
-        const genreName = genre.charAt(0).toUpperCase() + genre.slice(1);
-        allAILyrics.push({
-          sid: data[idField],
-          genre: genreName,
-          lyrics: data[segaField],
-          is_ai: true,
-          source: 'ai',
-          session_id: sessionId,
-          lottie: genre, // Add lottie field for genre mapping
-          color_code: getColorCodeForGenre(genreName) // Map genre to color
-        });
-      }
+    // Transform normalized rows into lyric objects
+    const allAILyrics = data.map((row) => {
+      const genreName = row.genre.charAt(0).toUpperCase() + row.genre.slice(1);
+      return {
+        sid: row.ai_id,
+        genre: genreName,
+        lyrics: row.lyrics,
+        is_ai: true,
+        source: 'ai',
+        session_id: sessionId,
+        lottie: row.genre, // Add lottie field for genre mapping
+        color_code: getColorCodeForGenre(genreName) // Map genre to color
+      };
     });
 
     console.log(`📊 Found ${allAILyrics.length} AI-generated lyrics`);
 
-    // STRICT: Return exactly 5 AI lyrics
-    // If we have 6, randomly exclude 1 genre
-    if (allAILyrics.length === 6) {
-      const randomIndex = Math.floor(Math.random() * 6);
-      const excludedLyric = allAILyrics[randomIndex];
-      const selectedAILyrics = allAILyrics.filter((_, index) => index !== randomIndex);
-      
-      console.log(`🎲 Randomly excluding AI genre: ${excludedLyric.genre}`);
-      console.log(`✅ Returning exactly 5 AI lyrics`);
-      
-      return selectedAILyrics;
-    } else if (allAILyrics.length === 5) {
-      console.log(`✅ Already have exactly 5 AI lyrics`);
-      return allAILyrics;
-    } else {
-      console.warn(`⚠️  Expected 5-6 AI lyrics, got ${allAILyrics.length}`);
-      return allAILyrics.slice(0, 5); // Take first 5 as fallback
+    // Validate we have exactly 5 AI lyrics
+    if (allAILyrics.length !== 5) {
+      console.error(`❌ Expected exactly 5 AI lyrics, got ${allAILyrics.length}`);
+      throw new Error(`Expected exactly 5 AI lyrics, got ${allAILyrics.length}`);
     }
+
+    console.log(`✅ Returning exactly 5 AI lyrics`);
+    return allAILyrics;
 
   } catch (error) {
     console.error('❌ Error in fetchAILyrics:', error);
