@@ -79,6 +79,11 @@ acknowledgement: {
     secondary: '#FFE5D0',
     background: '#FFF8F0',
   },
+  opinion: {
+    primary: '#D9E5FF',
+    secondary: '#F2E7FF',
+    background: '#F2E7FF',
+  },
   btn: {
     btn_inactive: '#D9D9D9',
   },

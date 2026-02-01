@@ -30,3 +30,6 @@ CREATE TABLE session_trackers (
 -- Add index for faster IP lookups
 CREATE INDEX idx_session_trackers_ip ON session_trackers(ip_address);
 CREATE INDEX idx_session_trackers_session ON session_trackers(session_id);
+
+-- Note: The 'session' table should have an 'opinion' column (TEXT) to store user opinions
+-- Example: ALTER TABLE session ADD COLUMN opinion TEXT;

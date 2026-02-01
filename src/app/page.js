@@ -156,7 +156,7 @@ export default function Home() {
   };
 
   const handleSurveyComplete = async () => {
-    console.log('✅ Survey completed! Moving to conclusion screen...');
+    console.log('✅ Survey and opinion completed! Moving to conclusion screen...');
     
     // LAYER 2: Lock the door immediately upon survey completion
     if (userIP && !isWhitelisted) {
