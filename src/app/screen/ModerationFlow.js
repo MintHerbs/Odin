@@ -269,7 +269,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 {/* Page 5: AI Sentiment */}
                 {currentSlide === 4 && (
                     <>
-                        <TitleText>How do you feel about Ai in the art industry?</TitleText>
+                        <TitleText>How do you feel about AI in the art industry?</TitleText>
                         <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
                             {[
                                 { id: 'hate', active: hateActive, inactive: hateInactive },
@@ -326,7 +326,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </div>
                     <div style={styles.modalBody}>
                         <div style={{ whiteSpace: 'pre-wrap' }}>
-                            {'We will present you with 10 sets of lyrics (3 verses each). These consist of a mixture of human-written Sega lyrics and specialized AI-generated lyrics.\n\nYour task is to read each one and rate your confidence:\n\n1 = Definitely Human\n5 = Definitely AI\n\nNote: You will always be presented with both types of lyrics throughout the session, though the distribution may vary.\n\n💡 TIP: You can click on any lyric container for an expanded view.'}
+                            {'We will present you with 10 sets of lyrics. These consist of a mixture of human-written Sega lyrics and specialized AI-generated lyrics.\n\nYour task is to read each one and rate your confidence:\n\n1 = Definitely Human\n5 = Definitely AI\n\nNote: You will always be presented with both types of lyrics throughout the session, though the distribution may vary.\n\n💡 TIP: You can click on any lyric container for an expanded view.'}
                         </div>
                     </div>
                 </div>

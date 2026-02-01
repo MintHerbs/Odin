@@ -14,24 +14,28 @@ export async function POST(request) {
       return Response.json({ error: 'session_id is required' }, { status: 400 });
     }
 
-    // Step 1: Select 5 human lyrics based on user preferences
-    console.log('📊 Step 1: Selecting human lyrics...');
+    // Step 1: Fetch AI lyrics first to check genre distribution
+    console.log('🤖 Step 1: Fetching AI lyrics...');
+    const aiLyrics = await fetchAILyrics(session_id);
+    
+    // Extract AI genres for diversity guardrail
+    const aiGenres = aiLyrics.map(lyric => lyric.genre);
+    console.log('📊 AI genres:', aiGenres);
+
+    // Step 2: Select 5 human lyrics based on user preferences and AI genres
+    console.log('📊 Step 2: Selecting human lyrics with genre diversity...');
     const humanSelection = await selectHumanLyrics({
       age,
       segaFamiliarity,
       aiSentiment
-    });
+    }, aiGenres);
 
     const humanLyrics = humanSelection.lyrics;
     const selectedSIDs = humanSelection.selectedSIDs;
 
-    // Step 2: Save selected SIDs to session_real_sega_chosen table
-    console.log('💾 Step 2: Saving selected SIDs...');
+    // Step 3: Save selected SIDs to session_real_sega_chosen table
+    console.log('💾 Step 3: Saving selected SIDs...');
     await saveSelectedSIDs(session_id, selectedSIDs);
-
-    // Step 3: Fetch AI lyrics for this session
-    console.log('🤖 Step 3: Fetching AI lyrics...');
-    const aiLyrics = await fetchAILyrics(session_id);
 
     // Step 4: Mix the lyrics
     console.log('🎭 Step 4: Mixing lyrics...');

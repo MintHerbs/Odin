@@ -54,6 +54,8 @@ STRUCTURE & FLOW:
 - Avoid short, clipped lines. Aim for a natural "rhythme trainé" where each stanza has 4-6 descriptive lines.
 - Develop a narrative or a specific "tableau" (scene) for each verse to ensure the lyrics feel substantial and human-written.
 - Use authentic local phrasing that captures the "tripo" of the island.
+- DO NOT use French-specific words or phrases unless it is necessary for the artistic development of the lyrics.
+- DO NOT use circumflex accents (e.g., use "lafet" instead of "lafête", "lapes" instead of "lapêche").
 
 Return ONLY a valid JSON object in this exact format:
 {

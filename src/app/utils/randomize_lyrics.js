@@ -28,15 +28,18 @@ const getColorCodeForGenre = (genre) => {
 
 /**
  * Select 5 human lyrics from survey_data based on user preferences
+ * with genre diversity guardrail (max 3 per genre)
  * @param {Object} userPreferences - User input from ModerationFlow
  * @param {number} userPreferences.age - User's age
  * @param {number} userPreferences.segaFamiliarity - Sega familiarity (1-5)
  * @param {number} userPreferences.aiSentiment - AI sentiment (1-5)
+ * @param {Array<string>} aiGenres - Array of AI-generated genres to avoid overexposure
  * @returns {Promise<Object>} Object containing lyrics array and selected IDs
  */
-export const selectHumanLyrics = async (userPreferences) => {
+export const selectHumanLyrics = async (userPreferences, aiGenres = []) => {
   try {
     console.log('🎵 Selecting human lyrics based on preferences:', userPreferences);
+    console.log('🤖 AI genres to consider for diversity:', aiGenres);
 
     const { age, segaFamiliarity, aiSentiment } = userPreferences;
 
@@ -139,22 +142,73 @@ export const selectHumanLyrics = async (userPreferences) => {
       };
     });
 
-    // Sort by score and select top 5
-    const selectedLyrics = scoredLyrics
-      .sort((a, b) => b.selectionScore - a.selectionScore)
-      .slice(0, 5)
-      .map(({ selectionScore, ...lyric }) => ({
-        ...lyric,
-        is_ai: false, // Mark as human-generated
-        source: 'human',
-        lottie: lyric.lottie || lyric.genre?.toLowerCase(), // Add lottie field for genre mapping
-        color_code: getColorCodeForGenre(lyric.genre) // Map genre to color
-      }));
+    // Sort by score and select top 5 with genre diversity guardrail
+    const sortedLyrics = scoredLyrics.sort((a, b) => b.selectionScore - a.selectionScore);
+    
+    // Count AI genres to track exposure
+    const genreCount = {};
+    aiGenres.forEach(genre => {
+      const normalizedGenre = genre.toLowerCase();
+      genreCount[normalizedGenre] = (genreCount[normalizedGenre] || 0) + 1;
+    });
+    
+    console.log('📊 AI genre distribution:', genreCount);
+    
+    // Select lyrics with genre diversity guardrail (max 3 per genre)
+    const selectedLyrics = [];
+    const MAX_GENRE_EXPOSURE = 3;
+    
+    for (const lyric of sortedLyrics) {
+      if (selectedLyrics.length >= 5) break;
+      
+      const lyricGenre = lyric.genre?.toLowerCase() || '';
+      const currentCount = genreCount[lyricGenre] || 0;
+      
+      // Check if adding this lyric would exceed the genre limit
+      if (currentCount < MAX_GENRE_EXPOSURE) {
+        selectedLyrics.push({
+          ...lyric,
+          is_ai: false,
+          source: 'human',
+          lottie: lyric.lottie || lyric.genre?.toLowerCase(),
+          color_code: getColorCodeForGenre(lyric.genre)
+        });
+        
+        // Update genre count
+        genreCount[lyricGenre] = currentCount + 1;
+        
+        console.log(`  ✅ Selected: ${lyric.genre} (total exposure: ${genreCount[lyricGenre]}/3)`);
+      } else {
+        console.log(`  ⚠️  Skipped: ${lyric.genre} (already at max exposure: ${currentCount}/3)`);
+      }
+    }
+    
+    // If we couldn't get 5 lyrics due to genre limits, fill with remaining best options
+    if (selectedLyrics.length < 5) {
+      console.warn(`⚠️  Only selected ${selectedLyrics.length} lyrics with genre guardrail. Filling remaining slots...`);
+      
+      for (const lyric of sortedLyrics) {
+        if (selectedLyrics.length >= 5) break;
+        
+        // Check if this lyric is already selected
+        const alreadySelected = selectedLyrics.some(selected => selected.sid === lyric.sid);
+        if (!alreadySelected) {
+          selectedLyrics.push({
+            ...lyric,
+            is_ai: false,
+            source: 'human',
+            lottie: lyric.lottie || lyric.genre?.toLowerCase(),
+            color_code: getColorCodeForGenre(lyric.genre)
+          });
+          console.log(`  ➕ Filled slot: ${lyric.genre}`);
+        }
+      }
+    }
 
     // Extract the SIDs for storage
     const selectedSIDs = selectedLyrics.map(lyric => lyric.sid);
 
-    console.log('✅ Selected 5 human lyrics:');
+    console.log('✅ Selected 5 human lyrics with genre diversity:');
     selectedLyrics.forEach((lyric, index) => {
       console.log(`  ${index + 1}. Genre: ${lyric.genre}, SID: ${lyric.sid}`);
     });
