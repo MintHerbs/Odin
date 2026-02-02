@@ -336,6 +336,19 @@ input[type="date"]:focus::-webkit-datetime-edit-year-field {
   color: #1F2429;
 }
 
+/* Show placeholder when date is empty */
+input[type="date"]:not(:focus):invalid::-webkit-datetime-edit {
+  color: transparent;
+}
+
+input[type="date"]:not(:focus):invalid::before {
+  content: attr(placeholder);
+  color: rgba(31, 36, 41, 0.6);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--font-roboto), Roboto, sans-serif;
+}
+
 /* Modal Animations */
 @keyframes fadeIn {
   from {
