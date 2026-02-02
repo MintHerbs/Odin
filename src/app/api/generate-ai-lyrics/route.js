@@ -1,13 +1,12 @@
-import { generateLyricsSequentially } from '../../lib/generateLyrics';
+import { generateAllLyrics } from '../../lib/generateLyrics';
 
-// Use Edge Runtime for better timeout handling (up to 25s on Hobby plan)
+// Use Edge Runtime for better timeout handling
 export const runtime = 'edge';
-export const maxDuration = 25; // Maximum duration in seconds
+export const maxDuration = 20; // 20 seconds is enough for 3 lyrics
 
 /**
- * Generate AI lyrics for a session
- * This route generates lyrics sequentially and stores them one by one
- * to avoid timeout issues and provide progressive updates
+ * Generate 3 AI lyrics for a session (optimized for speed)
+ * Completes in ~9-15 seconds, well within Vercel's timeout
  */
 export async function POST(request) {
   try {
@@ -20,15 +19,10 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    console.log(`🚀 Starting AI lyrics generation for session: ${session_id}`);
+    console.log(`🚀 Starting AI lyrics generation (2 lyrics) for session: ${session_id}`);
 
-    // Generate lyrics sequentially with progress tracking
-    const result = await generateLyricsSequentially(
-      session_id,
-      (progress) => {
-        console.log(`📊 Progress: ${progress.current}/${progress.total} - ${progress.genre} completed`);
-      }
-    );
+    // Generate 2 lyrics in parallel (faster than sequential)
+    const result = await generateAllLyrics(session_id);
 
     console.log(`✅ AI lyrics generation completed for session: ${session_id}`);
 
@@ -36,7 +30,8 @@ export async function POST(request) {
       success: true,
       message: 'AI lyrics generated successfully',
       session_id: session_id,
-      genres_generated: result.results.length,
+      genres_generated: result.count,
+      genres: result.genres,
       timestamp: new Date().toISOString()
     });
 

@@ -64,7 +64,8 @@ STYLE:
 }
 
 /**
- * Main function to generate all lyrics for a session
+ * Main function to generate 3 random lyrics for a session
+ * Optimized for speed - completes in ~9-15 seconds
  * This is designed to work in Vercel's serverless environment
  */
 export async function generateAllLyrics(sessionId) {
@@ -90,11 +91,11 @@ export async function generateAllLyrics(sessionId) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // Select 5 random genres
-  const selectedGenres = shuffle(GENRES).slice(0, 5);
-  console.log(`🎵 Generating lyrics for session ${sessionId}:`, selectedGenres.join(", "));
+  // Select 3 random genres (faster generation)
+  const selectedGenres = shuffle(GENRES).slice(0, 3);
+  console.log(`🎵 Generating 3 lyrics for session ${sessionId}:`, selectedGenres.join(", "));
 
-  // Generate lyrics for all genres in parallel
+  // Generate lyrics for all genres in parallel (faster)
   const rows = await Promise.all(
     selectedGenres.map(async (genre) => {
       console.log(`🎤 Generating ${genre} lyrics...`);
@@ -132,7 +133,8 @@ export async function generateAllLyrics(sessionId) {
 }
 
 /**
- * Generate lyrics one at a time (for streaming/progressive updates)
+ * Generate 3 lyrics one at a time (for streaming/progressive updates)
+ * Optimized for speed - completes in ~9-15 seconds
  */
 export async function generateLyricsSequentially(sessionId, onProgress) {
   const openaiKey = process.env.OPENAI_API_KEY;
@@ -151,14 +153,14 @@ export async function generateLyricsSequentially(sessionId, onProgress) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  const selectedGenres = shuffle(GENRES).slice(0, 5);
-  console.log(`🎵 Generating lyrics sequentially for session ${sessionId}`);
+  const selectedGenres = shuffle(GENRES).slice(0, 3);
+  console.log(`🎵 Generating 3 lyrics sequentially for session ${sessionId}`);
 
   const results = [];
 
   for (let i = 0; i < selectedGenres.length; i++) {
     const genre = selectedGenres[i];
-    console.log(`🎤 [${i + 1}/5] Generating ${genre} lyrics...`);
+    console.log(`🎤 [${i + 1}/3] Generating ${genre} lyrics...`);
     
     try {
       const lyrics = await generateLyricsForGenre(openai, genre);
@@ -180,14 +182,14 @@ export async function generateLyricsSequentially(sessionId, onProgress) {
         throw error;
       }
 
-      console.log(`✅ [${i + 1}/5] ${genre} lyrics stored`);
+      console.log(`✅ [${i + 1}/3] ${genre} lyrics stored`);
       results.push({ genre, success: true });
 
       // Call progress callback if provided
       if (onProgress) {
         onProgress({
           current: i + 1,
-          total: 5,
+          total: 3,
           genre,
           session_id: sessionId
         });

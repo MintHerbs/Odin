@@ -235,54 +235,67 @@ export const selectHumanLyrics = async (userPreferences, aiGenres = []) => {
 };
 
 /**
- * Fetch AI-generated lyrics for a specific session
- * Returns exactly 5 AI lyrics (one random genre is excluded during generation)
- * @param {string} sessionId - The session ID
- * @returns {Promise<Array>} Array of exactly 5 AI lyric objects
+ * Fetch AI-generated lyrics using the warm pool strategy
+ * 
+ * Strategy:
+ * 1. Check if there are ANY lyrics in session_ai_lyrics (from any session)
+ * 2. Return up to 5 most recent lyrics (warm pool)
+ * 3. If no lyrics exist, return empty array
+ * 
+ * This creates a "warm pool" where each user's generation benefits the next user
+ * Note: We generate 2 lyrics per session, so pool grows by 2 each time
+ * 
+ * @param {string} sessionId - The session ID (used for logging only)
+ * @returns {Promise<Array>} Array of AI lyric objects (0-5 lyrics)
  */
 export const fetchAILyrics = async (sessionId) => {
   try {
-    console.log('🤖 Fetching AI lyrics for session:', sessionId);
+    console.log('🤖 Fetching AI lyrics using warm pool strategy...');
+    console.log(`   Current session: ${sessionId}`);
 
+    // Fetch up to 5 most recent lyrics from ANY session (warm pool)
     const { data, error } = await supabase
       .from('session_ai_lyrics')
       .select('*')
-      .eq('session_id', sessionId);
+      .order('created_at', { ascending: false })
+      .limit(5);
 
     if (error) {
-      console.error('Error fetching AI lyrics:', error);
+      console.error('Error fetching AI lyrics from pool:', error);
       throw new Error(`Failed to fetch AI lyrics: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-      console.warn('⚠️  No AI lyrics found for this session');
+      console.warn('⏳ No AI lyrics in warm pool yet - will use human-only fallback');
       return [];
     }
+
+    // Use whatever we have (1-5 lyrics)
+    console.log(`📊 Found ${data.length} lyrics in warm pool`);
 
     // Transform normalized rows into lyric objects
     const allAILyrics = data.map((row) => {
       const genreName = row.genre.charAt(0).toUpperCase() + row.genre.slice(1);
       return {
         sid: row.ai_id,
+        id: row.id,
         genre: genreName,
         lyrics: row.lyrics,
         is_ai: true,
         source: 'ai',
-        session_id: sessionId,
+        created_at: row.created_at,
+        original_session_id: row.session_id, // Track which session generated it
         lottie: row.genre, // Add lottie field for genre mapping
         color_code: getColorCodeForGenre(genreName) // Map genre to color
       };
     });
 
-    console.log(`📊 Found ${allAILyrics.length} AI-generated lyrics`);
+    console.log(`✅ Using ${allAILyrics.length} lyrics from warm pool`);
+    console.log('📦 Warm pool lyrics:');
+    allAILyrics.forEach((lyric, idx) => {
+      console.log(`  ${idx + 1}. ${lyric.genre} (created: ${lyric.created_at})`);
+    });
 
-    // Validate we have exactly 5 AI lyrics
-    if (allAILyrics.length !== 5) {
-      console.error(`❌ Expected exactly 5 AI lyrics, got ${allAILyrics.length}`);
-      throw new Error(`Expected exactly 5 AI lyrics, got ${allAILyrics.length}`);
-    }
-
-    console.log(`✅ Returning exactly 5 AI lyrics`);
     return allAILyrics;
 
   } catch (error) {

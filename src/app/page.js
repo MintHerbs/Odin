@@ -5,7 +5,7 @@ import ModeratingScreen from './screen/ModerationFlow';
 import LoaderScreen from './screen/LoaderScreen';
 import Survey from './screen/survey';
 import ConclusionScreen from './screen/ConclusionScreen';
-import { generateSessionId, triggerBackgroundAI, mixLyricsForSession, checkAILyricsReady } from './utils/sessionUtils';
+import { generateSessionId, mixLyricsForSession } from './utils/sessionUtils';
 import { getUserIP, checkVoteStatus, lockVote } from './utils/ipUtils';
 
 export default function Home() {
@@ -13,10 +13,8 @@ export default function Home() {
   const [sessionId, setSessionId] = useState(null);
   const [userPreferences, setUserPreferences] = useState(null);
   const [mixedLyrics, setMixedLyrics] = useState([]);
-  const [loadingMessage, setLoadingMessage] = useState('Odin AI greets you!');
   const [userIP, setUserIP] = useState(null);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
-  const [loadingPhase, setLoadingPhase] = useState(0);
 
   useEffect(() => {
     // LAYER 1: The Initial Check - Browser First, Database Second
@@ -34,10 +32,9 @@ export default function Home() {
 
         if (voteStatus.isWhitelisted) {
           console.log('✅ Whitelisted IP detected - full access granted');
-          // Continue to generate session and trigger AI
+          // Continue to generate session
           const newSessionId = generateSessionId();
           setSessionId(newSessionId);
-          await triggerBackgroundAI(newSessionId);
           return;
         }
 
@@ -71,98 +68,52 @@ export default function Home() {
         console.log('✅ All checks passed - granting access');
         const newSessionId = generateSessionId();
         setSessionId(newSessionId);
-        
-        console.log('🚀 Triggering background AI generation...');
-        await triggerBackgroundAI(newSessionId);
 
       } catch (error) {
         console.error('Failed to initialize app:', error);
         // On error, allow user to proceed (fail open for better UX)
         const newSessionId = generateSessionId();
         setSessionId(newSessionId);
-        await triggerBackgroundAI(newSessionId);
       }
     };
 
     initializeApp();
   }, []);
 
-  useEffect(() => {
-    if (view === 'loading' && userPreferences && sessionId) {
-      fetchDataAndMixLyrics();
-    }
-  }, [view, userPreferences, sessionId]);
-
-  const fetchDataAndMixLyrics = async () => {
+  // Handle moderation completion - show loader while fetching lyrics
+  const handleModerationComplete = async (preferences) => {
+    console.log('✅ Moderation completed with preferences:', preferences);
+    setUserPreferences(preferences);
+    
+    // Show loader while fetching lyrics
+    setView('loading');
+    
     try {
-      console.log('🔄 Loading survey data and checking AI lyrics status...');
-      
-      // Rotating messages for loading phases
-      const rotatingMessages = [
-        'Generating lyrics...',
-        'Phonetic Mapping...',
-        'Generating lyrics...'
-      ];
-      
-      // Step 1: Check if AI lyrics are ready
-      const aiStatus = await checkAILyricsReady(sessionId);
-      
-      if (!aiStatus.ready) {
-        console.log(`⏳ AI lyrics not ready yet. Status: ${aiStatus.status}`);
-        console.log(`📊 Progress: ${aiStatus.genres_populated || 0}/${aiStatus.total_genres || 5} genres`);
-        
-        // Cycle through rotating messages
-        const messageIndex = loadingPhase % rotatingMessages.length;
-        setLoadingMessage(rotatingMessages[messageIndex]);
-        setLoadingPhase(prev => prev + 1);
-        
-        // Poll again after 3 seconds
-        setTimeout(() => {
-          fetchDataAndMixLyrics();
-        }, 3000);
-        return;
-      }
-
-      console.log('✅ AI lyrics are ready! Proceeding with mixing...');
-      setLoadingMessage('Mixing Lyrics...');
-
-      // Step 2: Mix lyrics based on user preferences
-      console.log('🎭 Mixing lyrics with user preferences:', userPreferences);
-      setLoadingMessage('Mixing Lyrics...');
-      
+      // Mix lyrics (uses warm pool + generates new ones)
+      console.log('🎭 Fetching and mixing lyrics...');
       const mixResult = await mixLyricsForSession(
         sessionId,
-        userPreferences.age,
-        userPreferences.segaFamiliarity,
-        userPreferences.aiSentiment
+        preferences.age,
+        preferences.segaFamiliarity,
+        preferences.aiSentiment
       );
 
       if (mixResult.success) {
         setMixedLyrics(mixResult.lyrics);
         console.log('✅ Mixed lyrics loaded:', mixResult.metadata);
-        setLoadingMessage('Done, Good luck!');
+        console.log(`📊 Warm pool size: ${mixResult.metadata.warmPoolSize || 0}`);
+        console.log(`🎵 AI source: ${mixResult.metadata.aiSource || 'none'}`);
+        
+        // Go to survey
+        setView('survey');
       } else {
         throw new Error('Failed to mix lyrics');
       }
-
-      // Give it a small delay so the final message is visible
-      setTimeout(() => {
-        setView('survey');
-      }, 1500);
     } catch (error) {
-      console.error('Error fetching data or mixing lyrics:', error);
-      setLoadingMessage('Done, Good luck!');
-      // Fallback: proceed to survey even with error after delay
-      setTimeout(() => {
-        setView('survey');
-      }, 1500);
+      console.error('❌ Error loading lyrics:', error);
+      alert('Failed to load survey. Please try again.');
+      setView('moderation'); // Go back to moderation on error
     }
-  };
-
-  const handleModerationComplete = (preferences) => {
-    console.log('✅ Moderation completed with preferences:', preferences);
-    setUserPreferences(preferences);
-    setView('loading');
   };
 
   const handleSurveyComplete = async () => {
@@ -203,7 +154,7 @@ export default function Home() {
   }
 
   if (view === 'loading') {
-    return <LoaderScreen message={loadingMessage} />;
+    return <LoaderScreen />;
   }
 
   if (view === 'survey') {
