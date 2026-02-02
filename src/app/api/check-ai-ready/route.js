@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-);
+// Validate environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ CRITICAL: Supabase environment variables are missing!');
+  console.error('Required variables:');
+  console.error('  - NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✓ Set' : '✗ Missing');
+  console.error('  - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:', supabaseKey ? '✓ Set' : '✗ Missing');
+  throw new Error('Missing required Supabase environment variables. Check your .env.local file.');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // All 8 genres that could be generated (but only 5 will be selected per session)
 const ALL_GENRES = ['politics', 'engager', 'romance', 'celebration', 'tipik', 'seggae', 'hotel', 'modern'];

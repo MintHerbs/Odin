@@ -3,10 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 // The system now uses example.mjs with OpenAI instead of Gemini
 // import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-);
+// Validate environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ CRITICAL: Supabase environment variables are missing!');
+  console.error('Required variables:');
+  console.error('  - NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✓ Set' : '✗ Missing');
+  console.error('  - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:', supabaseKey ? '✓ Set' : '✗ Missing');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 

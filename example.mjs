@@ -8,16 +8,31 @@ if (!sessionId) {
   process.exit(1);
 }
 
+/* Validate environment variables */
+const openaiKey = process.env.OPENAI_API_KEY;
+const openaiOrg = process.env.OPENAI_ORG_ID;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+if (!openaiKey) {
+  console.error("❌ OPENAI_API_KEY is missing");
+  process.exit(1);
+}
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("❌ Supabase environment variables are missing");
+  console.error("  - NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✓" : "✗");
+  console.error("  - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:", supabaseKey ? "✓" : "✗");
+  process.exit(1);
+}
+
 /* Clients */
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  organization: "org-TNbp13HHLuhYEKqloGkvVfg6"
+  apiKey: openaiKey,
+  organization: openaiOrg || "org-TNbp13HHLuhYEKqloGkvVfg6"
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 /* Config */
 const MODEL_ID =
