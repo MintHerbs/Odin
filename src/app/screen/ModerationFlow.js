@@ -241,6 +241,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                                 value={birthday}
                                 onChange={(e) => setBirthday(e.target.value)}
                                 style={styles.dateInput}
+                                placeholder="dd/mm/yyyy"
                                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                             />
                         </div>
@@ -379,7 +380,7 @@ const styles = {
         fontSize: '15px',
         fontWeight: '500',
         fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-        color: '#1F2429',
+        color: 'rgba(31, 36, 41, 0.6)',
         outline: 'none',
         cursor: 'pointer',
         WebkitAppearance: 'none',

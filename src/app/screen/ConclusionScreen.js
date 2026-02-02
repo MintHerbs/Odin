@@ -58,9 +58,9 @@ const ConclusionScreen = ({ onComplete }) => {
         <Background bgColor={theme.background}>
             <StackCard
                 baseColor={theme.primary}
-                baseHeight={500}
+                baseHeight={520}
                 topColor={theme.secondary}
-                topHeight={340}
+                topHeight={320}
                 baseChildren={
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
                         <div style={{ width: '200px', height: '200px' }}>
