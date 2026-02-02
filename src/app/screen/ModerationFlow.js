@@ -167,6 +167,14 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     return (
         <>
         <Background bgColor={theme.background}>
+            {/* Red Ripple Effect */}
+            {showError && (
+                <div style={styles.rippleContainer}>
+                    <div style={styles.ripple1}></div>
+                    <div style={styles.ripple2}></div>
+                    <div style={styles.ripple3}></div>
+                </div>
+            )}
             <StackCard
                 baseColor={theme.primary}
                 baseHeight={500}
@@ -446,6 +454,49 @@ const styles = {
         fontSize: '15px',
         color: '#1F2429',
         fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+    },
+    rippleContainer: {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0
+    },
+    ripple1: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '300px',
+        height: '300px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255, 77, 77, 0.4) 0%, rgba(255, 77, 77, 0.2) 40%, transparent 70%)',
+        animation: 'rippleExpand 2s ease-out forwards'
+    },
+    ripple2: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '300px',
+        height: '300px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255, 77, 77, 0.35) 0%, rgba(255, 77, 77, 0.15) 40%, transparent 70%)',
+        animation: 'rippleExpand 2s ease-out 0.3s forwards'
+    },
+    ripple3: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '300px',
+        height: '300px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255, 77, 77, 0.3) 0%, rgba(255, 77, 77, 0.1) 40%, transparent 70%)',
+        animation: 'rippleExpand 2s ease-out 0.6s forwards'
     }
 };
 
