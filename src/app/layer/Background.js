@@ -22,12 +22,20 @@ const Background = ({ bgColor, children }) => {
                 padding: '20px',
                 boxSizing: 'border-box'
             }}
+            className="background-container"
         >
             {/* 
               This inner div prevents the card from shrinking 
               and ensures it stays centered within the fixed container.
             */}
-            <div style={{ flexShrink: 0, position: 'relative' }}>
+            <div style={{ 
+                flexShrink: 0, 
+                position: 'relative',
+                width: '100%',
+                maxWidth: '700px',
+                display: 'flex',
+                justifyContent: 'center'
+            }}>
                 {children}
             </div>
         </div>

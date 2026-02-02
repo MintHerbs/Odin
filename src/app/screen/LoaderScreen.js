@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import PrimaryCard from '../layer/PrimaryCard';
 import Background from '../layer/Background';
 import TitleText from '../text/TitleText';
@@ -14,7 +14,7 @@ const LoaderScreen = ({ message = 'Loading survey...' }) => {
             <PrimaryCard
                 color={APP_COLORS.ui.button}
                 height={600}
-                width="500px"
+                width="100%"
             >
                 <div style={styles.container}>
                     <div style={styles.lottieContainer}>
