@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import StackCard from '../layer/StackCard';
-import PrimaryCard from '../layer/PrimaryCard';
 import { APP_COLORS } from '../config/colors';
 import Background from '../layer/Background';
 import TitleText from '../text/TitleText';
@@ -15,16 +14,12 @@ import { submitSessionData } from '../utils/sessionUtils';
 
 import Lottie from 'lottie-react';
 import moonAnimation from '../lottie/moon.json';
-import celebration from '../lottie/celebration.json';
-import engager from '../lottie/engager.json';
-import tipik from '../lottie/tipik.json';
 import birthdayLottie from '../lottie/birthday.json';
 import segaLottie from '../lottie/sega.json';
 import alertLottie from '../lottie/alert.json';
 import aiLottie from '../lottie/ai.json';
 
 // Import Icons
-import calendarIcon from '../reaction/calender.png';
 import hateActive from '../reaction/hate_active.png';
 import hateInactive from '../reaction/hate_inactive.png';
 import noActive from '../reaction/no_active.png';
@@ -177,9 +172,9 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
             )}
             <StackCard
                 baseColor={theme.primary}
-                baseHeight={500}
+                baseHeight={520}
                 topColor={theme.secondary}
-                topHeight={340}
+                topHeight={320}
                 baseChildren={
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
                         <div style={{ width: '200px', height: '200px' }}>
@@ -261,7 +256,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 {currentSlide === 3 && (
                     <>
                         <TitleText>How familiar are you with Mauritian sega on a scale of 1-5?</TitleText>
-                        <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+                        <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                             {[1, 2, 3, 4, 5].map((num) => (
                                 <SquareButton
                                     key={num}
@@ -278,7 +273,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 {currentSlide === 4 && (
                     <>
                         <TitleText>How do you feel about AI in the art industry?</TitleText>
-                        <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+                        <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                             {[
                                 { id: 'hate', active: hateActive, inactive: hateInactive },
                                 { id: 'no', active: noActive, inactive: noInactive },
@@ -382,15 +377,14 @@ const styles = {
         border: 'none',
         height: '65px',
         fontSize: '15px',
-        fontWeight: '500', // Medium
+        fontWeight: '500',
         fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-        color: '#1F242999', // 60% opacity of #1F2429
+        color: '#1F2429',
         outline: 'none',
         cursor: 'pointer',
-        appearance: 'none',
-        '::placeholder': {
-            color: '#1F242999'
-        }
+        WebkitAppearance: 'none',
+        MozAppearance: 'none',
+        appearance: 'none'
     },
     ageDisplay: {
         marginTop: '10px',
@@ -415,7 +409,8 @@ const styles = {
         backgroundColor: '#FFFFFF',
         borderRadius: '16px',
         padding: '30px',
-        width: '500px',
+        width: '90%',
+        maxWidth: '500px',
         maxHeight: '80vh',
         overflow: 'hidden',
         display: 'flex',

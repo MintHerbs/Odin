@@ -248,7 +248,7 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                     <>
                         <TitleText>What are your thoughts on using AI as a creative tool to aid artists, rather than a replacement?</TitleText>
                         
-                        <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+                        <div style={{ marginTop: '20px', marginBottom: '20px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <textarea
                                 value={opinionText}
                                 onChange={(e) => {
@@ -258,9 +258,11 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                                         setOpinionText(text);
                                     }
                                 }}
-                                placeholder="Type your answer here (Optional)"
+                                placeholder="Type your answer here"
+                                className="opinion-textarea"
                                 style={{
-                                    width: '360px',
+                                    width: '100%',
+                                    maxWidth: '360px',
                                     height: '95px',
                                     backgroundColor: 'rgba(31, 36, 41, 0.15)',
                                     backdropFilter: 'blur(10px)',
@@ -272,13 +274,17 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                                     fontFamily: 'var(--font-roboto), Roboto, sans-serif',
                                     resize: 'none',
                                     outline: 'none',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                             <div style={{
                                 fontSize: '12px',
                                 color: opinionText.trim().split(/\s+/).filter(word => word.length > 0).length > 200 ? '#FF4D4D' : '#666',
                                 fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                                marginTop: '5px'
+                                marginTop: '5px',
+                                width: '100%',
+                                maxWidth: '360px',
+                                textAlign: 'right'
                             }}>
                                 {opinionText.trim().split(/\s+/).filter(word => word.length > 0).length}/200 words
                             </div>
@@ -317,7 +323,7 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                             <SubText>{formatLyrics(currentRecord.lyrics)}</SubText>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '10px' }}>
+                        <div className="survey-voting-buttons" style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
                             {[1, 2, 3, 4, 5].map((num) => (
                                 <SquareButton
                                     key={num}
@@ -406,7 +412,8 @@ const styles = {
         backgroundColor: '#FFFFFF',
         borderRadius: '16px',
         padding: '30px',
-        width: '500px',
+        width: '90%',
+        maxWidth: '500px',
         maxHeight: '80vh',
         overflow: 'hidden',
         display: 'flex',
