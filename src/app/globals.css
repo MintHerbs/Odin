@@ -209,8 +209,9 @@ body {
 
   /* Opinion textarea mobile adjustments */
   .opinion-textarea {
-    width: calc(100% - 40px) !important;
-    max-width: calc(100% - 40px) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 70px !important;
   }
 
   /* Survey voting buttons - reduce gap on mobile */

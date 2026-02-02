@@ -248,7 +248,7 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                     <>
                         <TitleText>What are your thoughts on using AI as a creative tool to aid artists, rather than a replacement?</TitleText>
                         
-                        <div style={{ marginTop: '20px', marginBottom: '20px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ marginTop: '15px', marginBottom: '10px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <textarea
                                 value={opinionText}
                                 onChange={(e) => {
@@ -262,8 +262,8 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                                 className="opinion-textarea"
                                 style={{
                                     width: '100%',
-                                    maxWidth: '360px',
-                                    height: '95px',
+                                    maxWidth: '100%',
+                                    height: '80px',
                                     backgroundColor: 'rgba(31, 36, 41, 0.15)',
                                     backdropFilter: 'blur(10px)',
                                     color: '#1F2429',
@@ -283,7 +283,6 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                                 fontFamily: 'var(--font-roboto), Roboto, sans-serif',
                                 marginTop: '5px',
                                 width: '100%',
-                                maxWidth: '360px',
                                 textAlign: 'right'
                             }}>
                                 {opinionText.trim().split(/\s+/).filter(word => word.length > 0).length}/200 words

@@ -77,13 +77,15 @@ const ConclusionScreen = ({ onComplete }) => {
                 {currentSlide === 0 && (
                     <>
                         <TitleText>Success</TitleText>
-                        <SubText>
-                            Your response has been successfully submitted and securely recorded in the database.
-                            The information you provided will be used solely for academic research purposes.
-                            All responses will be treated with confidentiality and analyzed anonymously.
-                            Your participation contributes directly to the quality and validity of this research.
-                            Thank you for taking the time to participate in this dissertation.
-                        </SubText>
+                        <div style={styles.scrollContainer}>
+                            <SubText>
+                                Your response has been successfully submitted and securely recorded in the database.
+                                The information you provided will be used solely for academic research purposes.
+                                All responses will be treated with confidentiality and analyzed anonymously.
+                                Your participation contributes directly to the quality and validity of this research.
+                                Thank you for taking the time to participate in this dissertation.
+                            </SubText>
+                        </div>
                     </>
                 )}
 
@@ -121,7 +123,7 @@ const ConclusionScreen = ({ onComplete }) => {
 
 const styles = {
     scrollContainer: {
-        maxHeight: '180px', 
+        maxHeight: '150px',
         overflowY: 'auto',
         paddingRight: '10px',
         marginTop: '10px',
