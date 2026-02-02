@@ -1,6 +1,4 @@
-import { spawn } from 'child_process';
 import { createClient } from '@supabase/supabase-js';
-import { spawnScript } from '../../utils/scriptRunner.js';
 
 // Validate environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -64,59 +62,57 @@ export async function POST(request) {
       console.log('✅ Whitelisted IP - bypassing check');
     }
 
-    console.log(`🚀 Triggering background AI generation for session: ${session_id}`);
+    console.log(`🚀 Triggering AI generation for session: ${session_id}`);
 
-    // Spawn the background AI generation script
-    const result = spawnScript('example.mjs', [session_id], {
-      onStdout: (data) => {
-        const output = data.toString().trim();
-        if (output) {
-          console.log(`[AI-GEN-${session_id}] ${output}`);
-        }
-      },
-      onStderr: (data) => {
-        const error = data.toString().trim();
-        if (error) {
-          console.error(`[AI-GEN-ERROR-${session_id}] ${error}`);
-        }
-      },
-      onClose: (code) => {
-        if (code === 0) {
-          console.log(`✅ [AI-GEN-${session_id}] Background process completed successfully`);
-        } else {
-          console.error(`❌ [AI-GEN-${session_id}] Background process failed with code: ${code}`);
-        }
-      },
-      onError: (error) => {
-        console.error(`💥 [AI-GEN-${session_id}] Process error:`, error.message);
+    // Call the serverless-compatible generation API
+    // This works on both local and Vercel environments
+    try {
+      const baseUrl = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'http';
+      const apiUrl = `${protocol}://${baseUrl}/api/generate-ai-lyrics`;
+      
+      console.log(`📡 Calling generation API: ${apiUrl}`);
+      
+      // Make internal API call (non-blocking on Vercel)
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ session_id })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error(`❌ Generation API failed:`, result);
+        return Response.json({
+          success: false,
+          error: result.error || 'Failed to start AI generation',
+          timestamp: new Date().toISOString()
+        }, { status: response.status });
       }
-    });
 
-    // Check if spawn was successful
-    if (!result.success) {
-      console.error(`❌ Failed to start script: ${result.error}`);
+      console.log(`✅ AI generation completed for session: ${session_id}`);
+
+      return Response.json({
+        success: true,
+        message: 'AI lyrics generated successfully',
+        session_id: session_id,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (fetchError) {
+      console.error('❌ Error calling generation API:', fetchError);
       return Response.json({
         success: false,
-        error: result.error || 'Failed to start AI generation script',
-        path: result.path
+        error: `Failed to trigger generation: ${fetchError.message}`,
+        timestamp: new Date().toISOString()
       }, { status: 500 });
     }
 
-    const childProcess = result.process;
-    console.log(`✅ Background AI generation started for session: ${session_id}`);
-    console.log(`🔄 Process PID: ${childProcess.pid}`);
-
-    // Return immediately (non-blocking)
-    return Response.json({
-      success: true,
-      message: 'Background AI generation started',
-      session_id: session_id,
-      process_id: childProcess.pid,
-      timestamp: new Date().toISOString()
-    });
-
   } catch (error) {
-    console.error('❌ Error starting background AI generation:', error);
+    console.error('❌ Error in trigger-gen:', error);
     return Response.json({
       success: false,
       error: error.message,
@@ -130,12 +126,16 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const testSessionId = searchParams.get('session_id') || 'test-session-' + Date.now();
   
-  console.log(`🧪 Testing background AI generation with session: ${testSessionId}`);
+  console.log(`🧪 Testing AI generation with session: ${testSessionId}`);
   
   // Trigger the same process as POST
   return POST(new Request(request.url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'host': request.headers.get('host'),
+      'x-forwarded-proto': request.headers.get('x-forwarded-proto') || 'http'
+    },
     body: JSON.stringify({ session_id: testSessionId })
   }));
 }
