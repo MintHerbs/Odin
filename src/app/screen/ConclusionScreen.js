@@ -83,7 +83,7 @@ const ConclusionScreen = ({ onComplete }) => {
                                 The information you provided will be used solely for academic research purposes.
                                 All responses will be treated with confidentiality and analyzed anonymously.
                                 Your participation contributes directly to the quality and validity of this research.
-                                Thank you for taking the time to participate in this dissertation.
+                                Thank you for taking the time to participate in this study.
                             </SubText>
                         </div>
                     </>
