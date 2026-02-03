@@ -5,6 +5,7 @@ import ModeratingScreen from './screen/ModerationFlow';
 import LoaderScreen from './screen/LoaderScreen';
 import Survey from './screen/survey';
 import ConclusionScreen from './screen/ConclusionScreen';
+import MobileErrorScreen from './screen/MobileErrorScreen';
 import { generateSessionId, mixLyricsForSession } from './utils/sessionUtils';
 import { getUserIP, checkVoteStatus, lockVote } from './utils/ipUtils';
 
@@ -15,8 +16,19 @@ export default function Home() {
   const [mixedLyrics, setMixedLyrics] = useState([]);
   const [userIP, setUserIP] = useState(null);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Check if device is mobile
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const isSmallScreen = window.innerWidth <= 768;
+      return isMobileDevice || isSmallScreen;
+    };
+
+    setIsMobile(checkMobile());
+
     // LAYER 1: The Initial Check - Browser First, Database Second
     const initializeApp = async () => {
       try {
@@ -148,6 +160,11 @@ export default function Home() {
     // Could redirect to a thank you page or reset the app
     // For now, we'll just log it
   };
+
+  // Show mobile error screen if on mobile device
+  if (isMobile) {
+    return <MobileErrorScreen />;
+  }
 
   if (view === 'moderation') {
     return <ModeratingScreen sessionId={sessionId} onComplete={handleModerationComplete} />;
