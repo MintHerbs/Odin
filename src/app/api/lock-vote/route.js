@@ -18,15 +18,15 @@ const WHITELIST_IP = '102.115.222.233';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { ip_address, session_id } = body;
+    const { ip_address, session_id, device_id } = body;
 
-    if (!ip_address || !session_id) {
+    if (!session_id) {
       return Response.json({ 
-        error: 'IP address and session_id are required' 
+        error: 'session_id is required' 
       }, { status: 400 });
     }
 
-    console.log(`🔒 Locking vote for IP: ${ip_address}, Session: ${session_id}`);
+    console.log(`🔒 Locking vote for IP: ${ip_address}, Device: ${device_id}, Session: ${session_id}`);
 
     // NEVER lock the whitelist IP
     if (ip_address === WHITELIST_IP) {
@@ -38,11 +38,12 @@ export async function POST(request) {
       });
     }
 
-    // Insert into session_trackers
+    // Insert into session_trackers with both IP and device_id
     const { data, error } = await supabase
       .from('session_trackers')
       .insert({
-        ip_address,
+        ip_address: ip_address || null,
+        device_id: device_id || null,
         session_id,
         created_at: new Date().toISOString()
       });
@@ -50,11 +51,11 @@ export async function POST(request) {
     if (error) {
       // Check if it's a duplicate key error
       if (error.code === '23505') {
-        console.log('⚠️  IP already exists in session_trackers');
+        console.log('⚠️  Device or IP already exists in session_trackers');
         return Response.json({ 
           success: true,
           locked: true,
-          message: 'IP already locked (duplicate)'
+          message: 'Already locked (duplicate)'
         });
       }
       throw error;

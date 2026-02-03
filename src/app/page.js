@@ -8,6 +8,7 @@ import ConclusionScreen from './screen/ConclusionScreen';
 import MobileErrorScreen from './screen/MobileErrorScreen';
 import { generateSessionId, mixLyricsForSession } from './utils/sessionUtils';
 import { getUserIP, checkVoteStatus, lockVote } from './utils/ipUtils';
+import { getCookie, getOrCreateDeviceId, hasVotedCookie, markAsVoted } from './utils/cookieUtils';
 
 export default function Home() {
   const [view, setView] = useState('moderation');
@@ -29,10 +30,10 @@ export default function Home() {
 
     setIsMobile(checkMobile());
 
-    // LAYER 1: The Initial Check - Browser First, Database Second
+    // LAYER 1: The Initial Check - Cookie First (device-specific)
     const initializeApp = async () => {
       try {
-        // Fetch user's IP address
+        // Fetch user's IP address (for logging purposes)
         console.log('🔍 Fetching user IP address...');
         const ip = await getUserIP();
         setUserIP(ip);
@@ -50,33 +51,33 @@ export default function Home() {
           return;
         }
 
-        // Priority 1: Check LocalStorage first
-        const hasVotedLocal = localStorage.getItem('hasVoted');
-        
-        if (hasVotedLocal === 'true') {
-          console.log('⚠️  LocalStorage indicates user has voted - verifying with database...');
-          
-          // Verify against database
-          if (voteStatus.hasVoted) {
-            console.log('🚫 Database confirms - user has already voted. Redirecting to conclusion.');
-            setView('conclusion');
-            return;
-          } else {
-            console.log('⚠️  LocalStorage out of sync - clearing flag and allowing access');
-            localStorage.removeItem('hasVoted');
-          }
-        }
-
-        // Priority 2: Database Fallback (e.g., Incognito mode or cleared storage)
-        if (voteStatus.hasVoted) {
-          console.log('🚫 Database check: User has already voted (IP found in session_trackers)');
-          console.log('🔄 Re-syncing localStorage...');
-          localStorage.setItem('hasVoted', 'true');
+        // Priority 1: Check Cookie first (device-specific tracking)
+        if (hasVotedCookie()) {
+          console.log('🚫 Cookie indicates this device has already voted');
           setView('conclusion');
           return;
         }
 
-        // Priority 3: Grant Access - Both checks clear
+        // Priority 2: Check if this device ID has voted (from cookie)
+        const deviceId = getOrCreateDeviceId();
+        console.log(`🔍 Device ID: ${deviceId}`);
+        
+        // Check if this device has voted
+        const deviceVoteStatus = await fetch('/api/check-vote-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: deviceId, ip_address: ip })
+        }).then(res => res.json());
+
+        if (deviceVoteStatus.hasVoted) {
+          console.log('🚫 This device has already voted');
+          // Set cookie to prevent future checks
+          markAsVoted();
+          setView('conclusion');
+          return;
+        }
+
+        // Priority 3: Grant Access - All checks clear
         console.log('✅ All checks passed - granting access');
         const newSessionId = generateSessionId();
         setSessionId(newSessionId);
@@ -132,21 +133,22 @@ export default function Home() {
     console.log('✅ Survey and opinion completed! Moving to conclusion screen...');
     
     // LAYER 2: Lock the door immediately upon survey completion
-    if (userIP && !isWhitelisted) {
+    if (!isWhitelisted) {
       console.log('🔒 Locking vote for non-whitelisted user...');
       
       try {
-        // Lock in database first
-        const lockResult = await lockVote(userIP, sessionId);
+        const deviceId = getCookie('deviceId');
+        
+        // Lock in database with both IP and device ID
+        const lockResult = await lockVote(userIP, sessionId, deviceId);
         console.log('✅ Vote locked in database:', lockResult);
         
-        // Then set localStorage
-        localStorage.setItem('hasVoted', 'true');
-        console.log('✅ LocalStorage flag set');
+        // Set cookie to prevent future attempts
+        markAsVoted();
       } catch (error) {
         console.error('⚠️  Failed to lock vote:', error);
-        // Still set localStorage as fallback
-        localStorage.setItem('hasVoted', 'true');
+        // Still set cookie as fallback
+        markAsVoted();
       }
     } else if (isWhitelisted) {
       console.log('⚠️  Whitelisted IP - skipping lock');

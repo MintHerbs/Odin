@@ -38,19 +38,21 @@ export const checkVoteStatus = async (ipAddress) => {
 };
 
 /**
- * Lock the vote for this IP address
+ * Lock the vote for this device
  * @param {string} ipAddress - User's IP address
  * @param {string} sessionId - Current session ID
+ * @param {string} deviceId - Device ID from cookie
  * @returns {Promise<Object>} Lock result
  */
-export const lockVote = async (ipAddress, sessionId) => {
+export const lockVote = async (ipAddress, sessionId, deviceId) => {
   try {
     const response = await fetch('/api/lock-vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         ip_address: ipAddress,
-        session_id: sessionId
+        session_id: sessionId,
+        device_id: deviceId
       })
     });
 
