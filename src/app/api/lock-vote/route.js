@@ -38,15 +38,21 @@ export async function POST(request) {
       });
     }
 
-    // Insert into session_trackers with both IP and device_id
+    // Try to insert with device_id first, fallback to IP-only if column doesn't exist
+    let insertData = {
+      ip_address: ip_address || null,
+      session_id,
+      created_at: new Date().toISOString()
+    };
+
+    // Only add device_id if it exists
+    if (device_id) {
+      insertData.device_id = device_id;
+    }
+
     const { data, error } = await supabase
       .from('session_trackers')
-      .insert({
-        ip_address: ip_address || null,
-        device_id: device_id || null,
-        session_id,
-        created_at: new Date().toISOString()
-      });
+      .insert(insertData);
 
     if (error) {
       // Check if it's a duplicate key error
@@ -58,6 +64,37 @@ export async function POST(request) {
           message: 'Already locked (duplicate)'
         });
       }
+      
+      // If device_id column doesn't exist, try without it
+      if (error.message && error.message.includes('device_id')) {
+        console.log('⚠️  device_id column not found, trying without it...');
+        const { data: retryData, error: retryError } = await supabase
+          .from('session_trackers')
+          .insert({
+            ip_address: ip_address || null,
+            session_id,
+            created_at: new Date().toISOString()
+          });
+
+        if (retryError) {
+          if (retryError.code === '23505') {
+            return Response.json({ 
+              success: true,
+              locked: true,
+              message: 'Already locked (duplicate)'
+            });
+          }
+          throw retryError;
+        }
+
+        console.log('✅ Vote locked successfully (without device_id)');
+        return Response.json({ 
+          success: true,
+          locked: true,
+          message: 'Vote locked successfully'
+        });
+      }
+      
       throw error;
     }
 

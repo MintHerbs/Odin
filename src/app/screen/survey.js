@@ -45,6 +45,14 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showError, setShowError] = useState(false);
     const [showLyricsModal, setShowLyricsModal] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile on mount
+    useState(() => {
+        if (typeof window !== 'undefined') {
+            setIsMobile(window.innerWidth <= 700);
+        }
+    }, []);
 
     const totalSlides = 11; // 10 voting slides + 1 opinion slide
     const votingSlides = 10;
@@ -232,14 +240,14 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                 topColor={theme.secondary}
                 topHeight={320}
                 baseChildren={
-                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
-                        <div style={{ width: '180px', height: '180px' }}>
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: isMobile ? '30px' : '40px' }}>
+                        <div style={{ width: isMobile ? '150px' : '180px', height: isMobile ? '150px' : '180px' }}>
                             <Lottie animationData={lottieAnimation} loop={true} />
                         </div>
                     </div>
                 }
             >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '12px' : '15px' }}>
                     <SlidePagination amount={totalSlides} activeIndex={currentSlide} />
                 </div>
 
@@ -248,7 +256,7 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                     <>
                         <TitleText>What are your thoughts on using AI as a creative tool to aid artists, rather than a replacement?</TitleText>
                         
-                        <div style={{ marginTop: '15px', marginBottom: '10px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ marginTop: isMobile ? '12px' : '15px', marginBottom: '10px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <textarea
                                 value={opinionText}
                                 onChange={(e) => {
@@ -263,14 +271,14 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                                 style={{
                                     width: '100%',
                                     maxWidth: '100%',
-                                    height: '80px',
+                                    height: isMobile ? '70px' : '80px',
                                     backgroundColor: 'rgba(31, 36, 41, 0.15)',
                                     backdropFilter: 'blur(10px)',
                                     color: '#1F2429',
                                     border: '1px solid rgba(31, 36, 41, 0.2)',
                                     borderRadius: '8px',
-                                    padding: '12px',
-                                    fontSize: '14px',
+                                    padding: isMobile ? '10px' : '12px',
+                                    fontSize: isMobile ? '13px' : '14px',
                                     fontFamily: 'var(--font-roboto), Roboto, sans-serif',
                                     resize: 'none',
                                     outline: 'none',
@@ -299,10 +307,10 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                         <div 
                             onClick={() => setShowLyricsModal(true)}
                             style={{ 
-                                maxHeight: '120px', 
+                                maxHeight: isMobile ? '100px' : '120px', 
                                 overflowY: 'auto', 
                                 margin: '10px 0', 
-                                padding: '10px', 
+                                padding: isMobile ? '8px' : '10px', 
                                 backgroundColor: 'rgba(255,255,255,0.3)', 
                                 borderRadius: '8px',
                                 cursor: 'pointer',
@@ -337,7 +345,13 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
 
                 <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                     {showError && (
-                        <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
+                        <div style={{ 
+                            color: '#FF4D4D', 
+                            fontSize: isMobile ? '12px' : '14px', 
+                            fontWeight: '600', 
+                            marginBottom: '5px',
+                            textAlign: 'right'
+                        }}>
                             {isSubmitting ? 'Saving...' : currentSlide === votingSlides ? 'Please provide a valid answer (max 200 words)' : 'Please complete this step to continue'}
                         </div>
                     )}

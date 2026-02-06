@@ -164,9 +164,9 @@ export default function Home() {
   };
 
   // Show mobile error screen if on mobile device
-  if (isMobile) {
-    return <MobileErrorScreen />;
-  }
+  // if (isMobile) {
+  //   return <MobileErrorScreen />;
+  // }
 
   if (view === 'moderation') {
     return <ModeratingScreen sessionId={sessionId} onComplete={handleModerationComplete} />;

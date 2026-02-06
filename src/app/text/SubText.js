@@ -13,7 +13,7 @@ const SubText = ({ children, fullText }) => {
     return (
         <>
             <div style={styles.container}>
-                <span style={styles.sub}>
+                <span className="sub-text" style={styles.sub}>
                     {children}
                     {fullText && (
                         <span
@@ -44,7 +44,7 @@ const SubText = ({ children, fullText }) => {
                             ×
                         </button>
                         <div style={styles.modalContent}>
-                            <span style={styles.modalText}>
+                            <span className="sub-text" style={styles.modalText}>
                                 {fullText}
                             </span>
                         </div>
@@ -63,7 +63,7 @@ const styles = {
     },
     sub: {
         fontFamily: 'var(--font-roboto)',
-        fontWeight: '500', // Medium
+        fontWeight: '500',
         fontSize: 15,
         color: APP_COLORS.ui.subtext,
         lineHeight: '1.5',

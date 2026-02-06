@@ -3,7 +3,7 @@ import { APP_COLORS } from '../config/colors';
 
 const TitleText = ({ children, color }) => {
     return (
-        <span style={{ ...styles.title, color: color || styles.title.color }}>
+        <span className="title-text" style={{ ...styles.title, color: color || styles.title.color }}>
             {children}
         </span>
     );
@@ -12,7 +12,7 @@ const TitleText = ({ children, color }) => {
 const styles = {
     title: {
         fontFamily: 'var(--font-roboto)',
-        fontWeight: '600', // Semi-bold
+        fontWeight: '600',
         fontSize: 20,
         color: APP_COLORS.ui.button
     }

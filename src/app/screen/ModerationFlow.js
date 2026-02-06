@@ -40,7 +40,15 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const [errorMessage, setErrorMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showInstructionModal, setShowInstructionModal] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const totalSlides = 5;
+
+    // Detect mobile on mount
+    useState(() => {
+        if (typeof window !== 'undefined') {
+            setIsMobile(window.innerWidth <= 700);
+        }
+    }, []);
 
     // Calculate age from birthday
     const calculateAge = (birthdayString) => {
@@ -171,14 +179,14 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 topColor={theme.secondary}
                 topHeight={320}
                 baseChildren={
-                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
-                        <div style={{ width: '200px', height: '200px' }}>
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: isMobile ? '30px' : '40px' }}>
+                        <div style={{ width: isMobile ? '160px' : '200px', height: isMobile ? '160px' : '200px' }}>
                             <Lottie animationData={getLottie()} loop={true} />
                         </div>
                     </div>
                 }
             >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '15px' : '20px' }}>
                     <SlidePagination amount={totalSlides} activeIndex={currentSlide} />
                 </div>
 
@@ -226,12 +234,19 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                 {currentSlide === 2 && (
                     <>
                         <TitleText>When is your birthday?</TitleText>
-                        <div style={styles.dateInputContainer}>
+                        <div style={{
+                            ...styles.dateInputContainer,
+                            padding: isMobile ? '0 12px' : '0 15px'
+                        }}>
                             <input
                                 type="date"
                                 value={birthday}
                                 onChange={(e) => setBirthday(e.target.value)}
-                                style={styles.dateInput}
+                                style={{
+                                    ...styles.dateInput,
+                                    height: isMobile ? '55px' : '65px',
+                                    fontSize: isMobile ? '14px' : '15px'
+                                }}
                                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                             />
                         </div>
@@ -284,7 +299,13 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
 
                 <div style={{ ...styles.navContainer, flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                     {showError && (
-                        <div style={{ color: '#FF4D4D', fontSize: '14px', fontWeight: '600', marginBottom: '5px' }}>
+                        <div style={{ 
+                            color: '#FF4D4D', 
+                            fontSize: isMobile ? '12px' : '14px', 
+                            fontWeight: '600', 
+                            marginBottom: '5px',
+                            textAlign: 'right'
+                        }}>
                             {isSubmitting ? 'Submitting...' : errorMessage || 'Please complete this step to continue'}
                         </div>
                     )}

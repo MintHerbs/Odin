@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PrimaryCard from '../layer/PrimaryCard';
 import Background from '../layer/Background';
 import TitleText from '../text/TitleText';
@@ -9,6 +9,22 @@ import Lottie from 'lottie-react';
 import loadingAnimation from '../lottie/loading.json';
 
 const LoaderScreen = ({ message = 'Loading survey...' }) => {
+    const [displayText, setDisplayText] = useState('Thinking...');
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        // Detect mobile
+        if (typeof window !== 'undefined') {
+            setIsMobile(window.innerWidth <= 700);
+        }
+
+        const timer = setTimeout(() => {
+            setDisplayText('Odin AI greets you');
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <Background bgColor="#EAEDF0">
             <PrimaryCard
@@ -17,11 +33,11 @@ const LoaderScreen = ({ message = 'Loading survey...' }) => {
                 width="100%"
             >
                 <div style={styles.container}>
-                    <div style={styles.lottieContainer}>
+                    <div style={{...styles.lottieContainer, width: isMobile ? '80%' : '100%'}}>
                         <Lottie animationData={loadingAnimation} loop={true} />
                     </div>
                     <div style={styles.textContainer}>
-                        <TitleText color="#FFFFFF">{message}</TitleText>
+                        <TitleText color="#FFFFFF">{displayText}</TitleText>
                     </div>
                 </div>
             </PrimaryCard>

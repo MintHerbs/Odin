@@ -20,12 +20,12 @@ const PrimaryCard = ({ color, gradient, height, width = '500px', children }) => 
                 flexDirection: 'column',
 
                 // --- Vertical Positioning ---
-                justifyContent: 'flex-start', // Moves text to the top
-                paddingTop: '20px',           // Increase this specifically to "push" text down from the very top
+                justifyContent: 'flex-start',
+                paddingTop: '20px',
 
                 // --- Horizontal Positioning ---
-                alignItems: 'flex-start',     // Keeps text on the left
-                paddingLeft: '40px',          // Space from the left edge
+                alignItems: 'flex-start',
+                paddingLeft: '40px',
                 paddingRight: '40px',
                 paddingBottom: '40px',
 

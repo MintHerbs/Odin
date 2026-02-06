@@ -18,7 +18,15 @@ import infoAnimation from '../lottie/info.json';
 
 const ConclusionScreen = ({ onComplete }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [isMobile, setIsMobile] = useState(false);
     const totalSlides = 2;
+
+    // Detect mobile on mount
+    useState(() => {
+        if (typeof window !== 'undefined') {
+            setIsMobile(window.innerWidth <= 700);
+        }
+    }, []);
 
     const handleNext = () => {
         if (currentSlide < totalSlides - 1) {
@@ -62,14 +70,14 @@ const ConclusionScreen = ({ onComplete }) => {
                 topColor={theme.secondary}
                 topHeight={320}
                 baseChildren={
-                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
-                        <div style={{ width: '200px', height: '200px' }}>
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: isMobile ? '30px' : '40px' }}>
+                        <div style={{ width: isMobile ? '160px' : '200px', height: isMobile ? '160px' : '200px' }}>
                             <Lottie animationData={getLottie()} loop={true} />
                         </div>
                     </div>
                 }
             >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '15px' : '20px' }}>
                     <SlidePagination amount={totalSlides} activeIndex={currentSlide} />
                 </div>
 
