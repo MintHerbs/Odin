@@ -239,6 +239,11 @@ body {
   .sub-text {
     font-size: 14px !important;
   }
+
+  /* Checkbox mobile adjustments */
+  .checkbox-text-mobile {
+    font-size: 13px !important;
+  }
 }
 
 /* Extra small mobile - Under 400px */
