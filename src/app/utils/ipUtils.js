@@ -57,12 +57,20 @@ export const lockVote = async (ipAddress, sessionId, deviceId) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to lock vote');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('❌ Lock vote API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      throw new Error(`Failed to lock vote: ${errorData.error || response.statusText}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ Vote locked successfully:', result);
+    return result;
   } catch (error) {
-    console.error('❌ Error locking vote:', error);
+    console.error('❌ Error locking vote:', error.message);
     throw error;
   }
 };

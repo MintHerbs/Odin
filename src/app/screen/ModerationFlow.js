@@ -18,6 +18,7 @@ import birthdayLottie from '../lottie/birthday.json';
 import segaLottie from '../lottie/sega.json';
 import alertLottie from '../lottie/alert.json';
 import aiLottie from '../lottie/ai.json';
+import termsLottie from '../lottie/terms.json';
 
 // Import Icons
 import hateActive from '../reaction/hate_active.png';
@@ -40,7 +41,8 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const [errorMessage, setErrorMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showInstructionModal, setShowInstructionModal] = useState(false);
-    const totalSlides = 5;
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
+    const totalSlides = 6;
 
     // Calculate age from birthday
     const calculateAge = (birthdayString) => {
@@ -63,7 +65,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
         
         const age = calculateAge(birthday);
         if (age < 10) {
-            setErrorMessage('You must be at least 10 years old to participate');
+            setErrorMessage('You must be older than 7 to participate');
             return false;
         }
         
@@ -74,16 +76,19 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
         let isValid = true;
         let errorMsg = 'Please complete this step to continue';
 
-        if (currentSlide === 2) {
-            isValid = validateBirthday();
-        } else if (currentSlide === 3 && segaFamiliarity === null) {
+        if (currentSlide === 1 && !privacyAccepted) {
             isValid = false;
-        } else if (currentSlide === 4 && aiSentiment === null) {
+            errorMsg = 'Please accept the privacy statement to continue';
+        } else if (currentSlide === 3) {
+            isValid = validateBirthday();
+        } else if (currentSlide === 4 && segaFamiliarity === null) {
+            isValid = false;
+        } else if (currentSlide === 5 && aiSentiment === null) {
             isValid = false;
         }
 
         if (!isValid) {
-            if (currentSlide !== 1) {
+            if (currentSlide !== 2) {
                 setErrorMessage(errorMsg);
             }
             setShowError(true);
@@ -134,10 +139,11 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const getTheme = () => {
         switch (currentSlide) {
             case 0: return APP_COLORS.blue;
-            case 1: return APP_COLORS.instruction;
-            case 2: return APP_COLORS.birthday;
-            case 3: return APP_COLORS.sega;
-            case 4: return APP_COLORS.ai;
+            case 1: return APP_COLORS.acknowledgement;
+            case 2: return APP_COLORS.instruction;
+            case 3: return APP_COLORS.birthday;
+            case 4: return APP_COLORS.sega;
+            case 5: return APP_COLORS.ai;
             default: return APP_COLORS.blue;
         }
     };
@@ -147,10 +153,11 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
     const getLottie = () => {
         switch (currentSlide) {
             case 0: return moonAnimation;
-            case 1: return alertLottie;
-            case 2: return birthdayLottie;
-            case 3: return segaLottie;
-            case 4: return aiLottie;
+            case 1: return termsLottie;
+            case 2: return alertLottie;
+            case 3: return birthdayLottie;
+            case 4: return segaLottie;
+            case 5: return aiLottie;
             default: return moonAnimation;
         }
     };
@@ -195,6 +202,35 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
 
                 {currentSlide === 1 && (
                     <>
+                        <TitleText>Data Privacy & Use Statement</TitleText>
+                        <div style={styles.scrollableContent}>
+                            <SubText>
+                                This survey is fully anonymous. No names, contact details, student IDs, IP addresses, or location data are collected, and responses cannot be linked back to you.
+                                {'\n\n'}
+                                Only essential session cookies are used to let you complete the survey; they do not track you and are deleted when you close your browser.
+                                {'\n\n'}
+                                Your anonymized responses will be used solely for academic research to evaluate an AI model fine-tuned for Mauritian Creole. While data is securely stored by the researcher, anonymized text responses may be processed via OpenAI's API. No personal data is shared.
+                                {'\n\n'}
+                                All data is stored securely and will be permanently deleted after the dissertation is completed and graded (expected: 01/08/2025)
+                            </SubText>
+                        </div>
+                        <div style={styles.checkboxContainer} className="privacy-checkbox-container">
+                            <label style={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    checked={privacyAccepted}
+                                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                                    style={styles.checkbox}
+                                    className="privacy-checkbox"
+                                />
+                                <span style={styles.checkboxText} className="privacy-checkbox-text">I have read and accept the privacy statement</span>
+                            </label>
+                        </div>
+                    </>
+                )}
+
+                {currentSlide === 2 && (
+                    <>
                         <TitleText>How will this survey be conducted?</TitleText>
                         <div 
                             onClick={() => setShowInstructionModal(true)}
@@ -223,7 +259,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </>
                 )}
 
-                {currentSlide === 2 && (
+                {currentSlide === 3 && (
                     <>
                         <TitleText>When is your birthday?</TitleText>
                         <div style={styles.dateInputContainer}>
@@ -243,7 +279,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </>
                 )}
 
-                {currentSlide === 3 && (
+                {currentSlide === 4 && (
                     <>
                         <TitleText>How familiar are you with Mauritian sega on a scale of 1-5?</TitleText>
                         <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -259,7 +295,7 @@ const ModeratingScreen = ({ sessionId, onComplete }) => {
                     </>
                 )}
 
-                {currentSlide === 4 && (
+                {currentSlide === 5 && (
                     <>
                         <TitleText>How do you feel about AI in the art industry?</TitleText>
                         <div className="modern-flow-buttons" style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -478,6 +514,37 @@ const styles = {
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(255, 77, 77, 0.3) 0%, rgba(255, 77, 77, 0.1) 40%, transparent 70%)',
         animation: 'rippleExpand 2s ease-out 0.6s forwards'
+    },
+    checkboxContainer: {
+        marginTop: '20px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '15px',
+        backgroundColor: 'rgba(255,255,255,0.4)',
+        borderRadius: '12px',
+        border: '1px solid rgba(31, 36, 41, 0.1)'
+    },
+    checkboxLabel: {
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        gap: '12px',
+        userSelect: 'none'
+    },
+    checkbox: {
+        width: '20px',
+        height: '20px',
+        cursor: 'pointer',
+        accentColor: '#1F2429',
+        flexShrink: 0
+    },
+    checkboxText: {
+        fontSize: '14px',
+        fontWeight: '500',
+        color: '#1F2429',
+        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+        lineHeight: '1.4'
     }
 };
 
