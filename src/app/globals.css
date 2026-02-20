@@ -390,3 +390,21 @@ input[type="date"]:not(:focus):invalid::before {
     opacity: 0;
   }
 }
+
+
+/* Survey Legend Responsive Styles */
+@media (max-width: 700px) {
+  .survey-legend {
+    font-size: 10px !important;
+    margin-top: 6px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .survey-legend {
+    font-size: 9px !important;
+    margin-top: 5px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+}

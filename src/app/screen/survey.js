@@ -332,6 +332,21 @@ const Survey = ({ records, sessionId, onSurveyComplete, userIP }) => {
                                 />
                             ))}
                         </div>
+                        <div className="survey-legend" style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            marginTop: '8px',
+                            fontSize: '15px',
+                            color: 'rgba(31, 36, 41, 0.6)',
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            fontWeight: '500',
+                            paddingLeft: '5px',
+                            paddingRight: '5px'
+                        }}>
+                            <span> 1 = Human   |  5 = Artificial Intelligence</span>
+                            
+
+                        </div>
                     </>
                 )}
 
